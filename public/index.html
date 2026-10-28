@@ -169,6 +169,9 @@ h2{font-size:clamp(24px,6vw,34px);margin:8px 0;text-align:center}
 @keyframes pop{40%{scale:1.15}}
 
 .confetti{position:fixed;inset:0;pointer-events:none;z-index:80;overflow:hidden}
+.fw{position:fixed;inset:0;pointer-events:none;z-index:81}
+.fw i{position:absolute;width:9px;height:9px;border-radius:50%;opacity:0;animation:burst 1.3s ease-out forwards;box-shadow:0 0 8px currentColor}
+@keyframes burst{0%{opacity:1;transform:translate(0,0) scale(.6)}70%{opacity:1}100%{opacity:0;transform:translate(var(--dx),calc(var(--dy) + 40px)) scale(1)}}
 .confetti span{position:absolute;top:-50px;animation:fall 1.9s ease-in forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(540deg)}}
 
@@ -213,7 +216,7 @@ select{font:inherit;padding:4px;border-radius:8px}
 }
 .card.locked{background:var(--slot);cursor:default}
 @media (prefers-reduced-motion: reduce){
-  .buddy{animation:none}.confetti{display:none}.shake,.pop{animation:none}
+  .buddy{animation:none}.confetti,.fw{display:none}.shake,.pop{animation:none}
 }
 </style>
 </head>
@@ -407,7 +410,7 @@ const AVATARS=[{e:'🦁',n:'ליאו'},{e:'🐱',n:'מיצי'},{e:'🦄',n:'קש
 const STICKERS='🌈🚀🍦🎈🦋🌻🐳🍉🎨🏆🌟🎠🦖🍭🛼🪁🎸🐙🌮🧁🦩🚂🍀🐞🎪🛸🌋🦜🏰👑'.match(/\p{Extended_Pictographic}/gu);
 
 /* ===================== Storage ===================== */
-const APP_VERSION='1.2.0';
+const APP_VERSION='1.3.0';
 // Retention: a child's data is kept for 7 days after their last use, then deleted automatically.
 const RETENTION_DAYS=7;
 const IS_PROD=document.documentElement.dataset.build==='prod';
@@ -463,7 +466,7 @@ const Speech=(()=>{
   }
   const eduFallback=()=>DB.eduFallback||'device';
   function canPlayEdu(text,kind){
-    if(!DB.sound)return false;
+    if(!voiceOn())return false;
     if(mode==='server'&&approved.has(eduKey(text,kind)))return true;
     return eduFallback()==='device'&&deviceOK()&&(!!voice||speechSynthesis.getVoices().length===0);
   }
@@ -527,7 +530,7 @@ const Speech=(()=>{
   let missingShown=0;
   function noteMissing(kind){if(Date.now()-missingShown<20000)return;missingShown=Date.now();const b=document.getElementById('bubble');if(b)b.textContent=`🔇 ${{syllable:'לצליל הזה',sentence:'למשפט הזה',term:'לשם הניקוד הזה'}[kind]||'למילה הזו'} עוד אין קול. אפשר להמשיך 🙂`;}
   async function play(items){
-    stop();const my=seq;if(!DB.sound)return;
+    stop();const my=seq;if(!voiceOn())return;
     for(const it of items){if(my!==seq)return;await playOne(it,my);}
   }
   return{init,play,stop,canPlayEdu,stats,get mode(){return mode;},get approvedCount(){return approved.size;},get ready(){return ready;}};
@@ -536,14 +539,44 @@ const Speech=(()=>{
 function speakUI(parts,style='instruction'){Speech.play([].concat(parts).filter(Boolean).map(t=>({text:t,kind:'ui',style})));}
 // Educational speech: a display text (or several) of one kind
 function speakEdu(texts,kind){Speech.play([].concat(texts).filter(Boolean).map(t=>({text:t,kind:kind||kindOf(t)})));}
-function canHear(){return DB.sound&&(Speech.mode==='server'||'speechSynthesis' in window);}
+function voiceOn(){return !!DB.voice&&!!DB.sound;}
+function canHear(){return voiceOn()&&(Speech.mode==='server'||'speechSynthesis' in window);}
 function canHearEdu(text,kind){return Speech.canPlayEdu(cleanSpeech(text),kind||kindOf(text));}
 let lastSpeech=[],lastStyle='instruction';
 function say(text,spoken,style){document.getElementById('bubble').textContent=text;lastSpeech=spoken||[text];lastStyle=style||'instruction';speakUI(lastSpeech,lastStyle);}
 
 let actx=null;
 function tone(f,d,when=0,type='sine',vol=.18){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),gn=actx.createGain();o.type=type;o.frequency.value=f;gn.gain.setValueAtTime(vol,actx.currentTime+when);gn.gain.exponentialRampToValueAtTime(.001,actx.currentTime+when+d);o.connect(gn).connect(actx.destination);o.start(actx.currentTime+when);o.stop(actx.currentTime+when+d);}catch(e){}}
-function sfx(k){if(!DB.sound)return;if(k==='yes'){tone(660,.15);tone(880,.25,.12);}else if(k==='no'){tone(220,.25,0,'triangle',.12);}else if(k==='tap'){tone(520,.06,0,'sine',.08);}else if(k==='win'){[523,659,784,1047].forEach((f,i)=>tone(f,.25,i*.12));}}
+function ac(){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==='suspended'&&actx.resume)actx.resume().catch(()=>{});return actx;}catch(e){return null;}}
+// soft bell: a sine with a quiet octave overtone and a smooth decay
+function bell(f,when,dur=.6,vol=.11){const c=ac();if(!c)return;const t=c.currentTime+when;
+  [[1,vol],[2,vol*.25],[3,vol*.08]].forEach(([m,v])=>{const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=f*m;
+    g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(v,t+.015);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(c.destination);o.start(t);o.stop(t+dur+.05);});}
+// firework: a soft rising whoosh, then a sparkly crackle (filtered noise)
+let noiseBuf=null;
+function crackle(when,dur=.45,vol=.05){const c=ac();if(!c)return;const t=c.currentTime+when;
+  if(!noiseBuf){noiseBuf=c.createBuffer(1,c.sampleRate,c.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()<.04?(Math.random()*2-1):0;}
+  const n=c.createBufferSource();n.buffer=noiseBuf;const f=c.createBiquadFilter();f.type='highpass';f.frequency.value=3500;const g=c.createGain();
+  g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);n.connect(f).connect(g).connect(c.destination);n.start(t,Math.random()*.4);n.stop(t+dur);}
+function whoosh(when,vol=.04){const c=ac();if(!c)return;const t=c.currentTime+when;const o=c.createOscillator(),g=c.createGain();o.type='sine';
+  o.frequency.setValueAtTime(300,t);o.frequency.exponentialRampToValueAtTime(1400,t+.35);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.1);g.gain.exponentialRampToValueAtTime(.0001,t+.38);
+  o.connect(g).connect(c.destination);o.start(t);o.stop(t+.4);}
+const MELODIES=[[523,659,784,1047],[587,740,880,1175],[523,784,659,1047],[659,784,988,1319]];
+function sfx(k){
+  if(!DB.sound)return;
+  if(k==='yes'){const m=rnd(MELODIES);m.forEach((f,i)=>bell(f,i*.11,.55));whoosh(.05);crackle(.42,.4,.045);}
+  else if(k==='win'){[523,659,784,1047,1319].forEach((f,i)=>bell(f,i*.12,.7,.12));[0,.5,1].forEach(w=>{whoosh(w);crackle(w+.38,.5,.05);});bell(1047,.72,1.1,.1);bell(1319,.72,1.1,.07);}
+  else if(k==='no'){bell(392,0,.35,.06);bell(330,.14,.45,.05);}   // soft "try again", never harsh
+  else if(k==='tap'){bell(880,0,.12,.04);}
+}
+function fireworks(n=3){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const box=document.createElement('div');box.className='fw';const cols=['#FFC21A','#FF5D8F','#7B5CF0','#22B26B','#2F7BF6','#FF8A2B'];
+  for(let b=0;b<n;b++){const x=15+Math.random()*70,y=12+Math.random()*35,c=cols[(b*2+Math.floor(Math.random()*3))%cols.length],d=b*.28;
+    for(let i=0;i<18;i++){const p=document.createElement('i');const a=i/18*Math.PI*2,r=60+Math.random()*40;
+      p.style.cssText=`left:${x}%;top:${y}%;background:${c};--dx:${Math.cos(a)*r}px;--dy:${Math.sin(a)*r}px;animation-delay:${d}s`;box.appendChild(p);}}
+  document.body.appendChild(box);window.setTimeout(()=>box.remove(),2200);
+}
 function confetti(){const box=document.createElement('div');box.className='confetti';const em=['⭐','🎉','✨','🌟','💛','🎈','💜'];for(let i=0;i<28;i++){const s=document.createElement('span');s.textContent=em[i%em.length];s.style.left=Math.random()*100+'%';s.style.animationDelay=(Math.random()*.5)+'s';s.style.fontSize=(20+Math.random()*24)+'px';box.appendChild(s);}document.body.appendChild(box);window.setTimeout(()=>box.remove(),2600);}
 
 const PRAISE=()=>['יופי!','מצוין!','כל הכבוד!','וואו!','נהדר!',g('אתה אלוף!','את אלופה!'),g('איזה קורא!','איזו קוראת!'),'בדיוק!'];
@@ -602,7 +635,7 @@ const R={};
 function header(txt,spoken,hearFn){
   const box=el(`<div class="prompt"><div class="txt">${esc(txt)}</div></div>`);
   say(txt,spoken);
-  if(hearFn){const b=el(`<button class="hear" aria-label="לשמוע">🔊</button>`);b.onclick=hearFn;box.prepend(b);}
+  if(hearFn&&voiceOn()){const b=el(`<button class="hear" aria-label="לשמוע">🔊</button>`);b.onclick=hearFn;box.prepend(b);}
   return box;
 }
 R.tapAll=(ex,ctx)=>{
@@ -644,7 +677,7 @@ R.vowelName=(ex,ctx)=>{
 R.sameDiff=(ex,ctx)=>{
   const a=syl(ex.l,ex.a),b=syl(ex.l,ex.b);
   const same=(ex.a==='e')===(ex.b==='e');
-  stage.append(header(`${g('הקשב','הקשיבי')} לשני הצלילים. הם נשמעים אותו דבר?`,null,()=>speakEdu([a,b],'syllable')));
+  stage.append(header(voiceOn()?`${g('הקשב','הקשיבי')} לשני הצלילים. הם נשמעים אותו דבר?`:`האם שני הכרטיסים נקראים אותו דבר?`,null,()=>speakEdu([a,b],'syllable')));
   const row=el(`<div class="row"></div>`);
   [a,b].forEach(s=>{const c=el(`<div class="card" role="button" tabindex="0">${s}</div>`);c.onclick=()=>speakEdu(s,'syllable');row.append(c);});
   stage.append(row);
@@ -781,7 +814,7 @@ function readAloud(w,done){
     };
     row.append(mic);
   }
-  row.append(listen,self);
+  if(voiceOn())row.append(listen);row.append(self);
 }
 
 /* ===================== Exercise engine ===================== */
@@ -792,7 +825,7 @@ function runEx(ex,opts,cb){
   const ctx={
     miss(){if(closed)return true;first=false;sfx('no');if(opts.placement){closed=true;say('לא נורא, ממשיכים! 🙂',null,'correction');later(()=>cb(false),1100);return true;}say(rnd(TRY()),null,'encourage');return false;},
     win(extra,w){if(closed)return;closed=true;sfx('yes');if(first&&!opts.placement){P().stars++;save();setBuddy();checkSticker();}
-      const msg=rnd(PRAISE())+(extra?' '+extra:'');say(msg,null,'praise');if(first)confetti();
+      const msg=rnd(PRAISE())+(extra?' '+extra:'');say(msg,null,'praise');fireworks(first?3:1);
       if(!opts.placement&&w&&opts.read&&(ex.type==='build'||Math.random()<.4))later(()=>readAloud(w,()=>cb(first)),1300);
       else later(()=>cb(first),1400);}
   };
@@ -990,7 +1023,7 @@ function matchRatio(target,transcripts){
 }
 function listenOnce(onRes,onErr,onEnd){try{const rec=new SR();rec.lang='he-IL';rec.maxAlternatives=5;rec.interimResults=false;rec.onresult=e=>onRes([...e.results[0]].map(a=>a.transcript));rec.onerror=onErr;rec.onend=onEnd;rec.start();}catch(e){onErr();onEnd();}}
 function karaoke(spans){
-  if(!DB.sound){say('הקול כבוי. אפשר להדליק אותו בכפתור למעלה 🔇');return;}
+  if(!voiceOn()){say('הקול כבוי. אפשר להדליק אותו בכפתור למעלה 🔇');return;}
   const hl=s=>{spans.forEach(x=>x.classList.remove('hl'));s.classList.add('hl');};
   Speech.play(spans.map(s=>({text:s.dataset.w,kind:'word',onstart:()=>hl(s)}))).then(()=>spans.forEach(x=>x.classList.remove('hl')));
 }
@@ -1055,7 +1088,7 @@ function renderReading(item,o,done){
   const bL=el(`<button class="btn ghostb small">🔊 ${g('תקריא לי','תקריאי לי')}</button>`);bL.onclick=()=>karaoke(spans);
   let syl=false;const bS=el(`<button class="btn ghostb small">✂️ לחלק להברות</button>`);
   bS.onclick=()=>{syl=!syl;spans.forEach(s=>s.innerHTML=(syl?sylHTML(s.dataset.w):s.dataset.w)+s.dataset.p);bS.textContent=syl?'✂️ בלי חלוקה':'✂️ לחלק להברות';};
-  tools.append(bL,bS);
+  if(voiceOn())tools.append(bL);tools.append(bS);
   const row=el(`<div class="row" style="margin-top:14px"></div>`);
   let finished=false;
   const next=bonus=>{
@@ -1176,7 +1209,10 @@ function screenTeacher(){
   const mic=el(`<label style="display:flex;gap:10px;align-items:center;font-size:16px;margin:8px 0"><input type="checkbox" style="width:22px;height:22px" ${micOn()?'checked':''} ${SR?'':'disabled'}> זיהוי קריאה בקול במיקרופון ${SR?'':'(לא נתמך בדפדפן הזה)'}</label>`);
   mic.querySelector('input').onchange=e=>{DB.mic=e.target.checked;save();};
   set.append(mic,el(`<p style="font-size:14px;margin:0 0 10px" class="muted">בדפדפנים כמו Chrome, זיהוי הדיבור מתבצע בשרתי יצרן הדפדפן. כשהאפשרות כבויה, הילדים מסמנים "קראתי בקול" בעצמם.</p>`));
-  const sp=el(`<div style="margin:12px 0"><h3 style="font-size:18px;margin:6px 0">קול</h3>
+  const vo=el(`<label style="display:flex;gap:10px;align-items:center;font-size:16px;margin:8px 0"><input type="checkbox" style="width:22px;height:22px" ${DB.voice?'checked':''}> קול מדבר (הקראת הוראות ומילים)</label>`);
+  vo.querySelector('input').onchange=e=>{DB.voice=e.target.checked;save();screenTeacher();};
+  set.append(vo,el(`<p class="muted" style="font-size:14px;margin:0 0 6px">כבוי כרגע: התרגילים מבוססים על קריאה, תמונות וסידור, בלי שמיעה. מנגינות העידוד פועלות לפי כפתור 🔊 למעלה.</p>`));
+  const sp=el(`<div style="margin:12px 0;${DB.voice?'':'display:none'}"><h3 style="font-size:18px;margin:6px 0">קול</h3>
     <label style="display:block;font-size:16px;margin:6px 0">מהירות דיבור: <input type="range" min="0.7" max="1.2" step="0.05" value="${DB.rate||1}" style="vertical-align:middle;width:160px"> <span></span></label>
     <label style="display:block;font-size:16px;margin:6px 0">מילים, צלילים ומשפטים ללימוד שאין להם עדיין הקלטה מאושרת:
       <select><option value="device">להשמיע בקול המכשיר (לא נבדק)</option><option value="none">לא להשמיע</option></select></label>
