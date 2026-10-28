@@ -1,0 +1,357 @@
+{
+ "about": "סט בדיקת הגייה. 'expect' היא ההגייה הישראלית שצריך לשמוע, בתעתיק לטיני (kh = ח/כ, ts = צ). הבדיקות הטכניות אוטומטיות; כל פריט כאן נבדק באוזן.",
+ "words": [
+  {
+   "text": "דָג",
+   "kind": "word",
+   "expect": "dag",
+   "check": "קמץ"
+  },
+  {
+   "text": "דַף",
+   "kind": "word",
+   "expect": "daf",
+   "check": "פתח, ף סופית נשמעת f"
+  },
+  {
+   "text": "יָד",
+   "kind": "word",
+   "expect": "yad",
+   "check": "קמץ"
+  },
+  {
+   "text": "גַג",
+   "kind": "word",
+   "expect": "gag",
+   "check": "אותה אות פעמיים"
+  },
+  {
+   "text": "כַּד",
+   "kind": "word",
+   "expect": "kad",
+   "check": "כּ עם דגש = k"
+  },
+  {
+   "text": "דְבַשׁ",
+   "kind": "word",
+   "expect": "dvash",
+   "check": "שווא בתחילת מילה (בדיבור כמעט לא נשמע)"
+  },
+  {
+   "text": "אַבָּא",
+   "kind": "word",
+   "expect": "aba",
+   "check": "בּ עם דגש = b"
+  },
+  {
+   "text": "סַבָּא",
+   "kind": "word",
+   "expect": "saba",
+   "check": "ס = s"
+  },
+  {
+   "text": "תָמָר",
+   "kind": "word",
+   "expect": "tamar",
+   "check": "שני קמצים"
+  },
+  {
+   "text": "גָמָל",
+   "kind": "word",
+   "expect": "gamal",
+   "check": "שני קמצים"
+  },
+  {
+   "text": "עָנָן",
+   "kind": "word",
+   "expect": "anan",
+   "check": "ע בתחילת מילה"
+  },
+  {
+   "text": "בַּנָנָה",
+   "kind": "word",
+   "expect": "banana",
+   "check": "שלוש הברות"
+  },
+  {
+   "text": "שַׁבָּת",
+   "kind": "word",
+   "expect": "shabat",
+   "check": "שׁ = sh"
+  },
+  {
+   "text": "צְרָצַר",
+   "kind": "word",
+   "expect": "tsratsar",
+   "check": "צ = ts, שווא בהתחלה"
+  },
+  {
+   "text": "שַׁחְיָן",
+   "kind": "word",
+   "expect": "shakhyan",
+   "check": "שווא נח באמצע"
+  },
+  {
+   "text": "מַחְבַּת",
+   "kind": "word",
+   "expect": "makhvat",
+   "check": "ב בלי דגש = v"
+  },
+  {
+   "text": "קַרְנַף",
+   "kind": "word",
+   "expect": "karnaf",
+   "check": "ק = k, ף סופית = f"
+  },
+  {
+   "text": "עַכְבָּר",
+   "kind": "word",
+   "expect": "akhbar",
+   "check": "כ בלי דגש = kh"
+  },
+  {
+   "text": "פַּרְפַּר",
+   "kind": "word",
+   "expect": "parpar",
+   "check": "פּ עם דגש = p"
+  },
+  {
+   "text": "חַשְׁמַל",
+   "kind": "word",
+   "expect": "khashmal",
+   "check": "ח = kh"
+  },
+  {
+   "text": "קַנְקַן",
+   "kind": "word",
+   "expect": "kankan",
+   "check": "ן סופית"
+  },
+  {
+   "text": "שָׂם",
+   "kind": "word",
+   "expect": "sam",
+   "check": "שׂ (שׂין) = s ולא sh"
+  },
+  {
+   "text": "סֵפֶר",
+   "kind": "word",
+   "expect": "sefer (book)",
+   "check": "מנוקד מול לא מנוקד: אותן אותיות כמו סַפָּר"
+  },
+  {
+   "text": "סַפָּר",
+   "kind": "word",
+   "expect": "sapar (barber)",
+   "check": "הניקוד חייב לקבוע את הקריאה"
+  },
+  {
+   "text": "ספר",
+   "kind": "word",
+   "expect": "usually sefer",
+   "check": "בלי ניקוד, דו־משמעי: מראה מה המנוע מנחש"
+  },
+  {
+   "text": "חָלָב",
+   "kind": "word",
+   "expect": "khalav (milk)",
+   "check": "מנוקד"
+  },
+  {
+   "text": "חלב",
+   "kind": "word",
+   "expect": "usually khalav",
+   "check": "בלי ניקוד, דו־משמעי (חָלָב / חֵלֶב)"
+  }
+ ],
+ "syllables": [
+  {
+   "text": "דָ",
+   "kind": "syllable",
+   "expect": "da",
+   "check": "קמץ לבד"
+  },
+  {
+   "text": "דַ",
+   "kind": "syllable",
+   "expect": "da",
+   "check": "חייב להישמע כמו דָ"
+  },
+  {
+   "text": "דְ",
+   "kind": "syllable",
+   "expect": "de",
+   "check": "שווא לבד"
+  },
+  {
+   "text": "בָּ",
+   "kind": "syllable",
+   "expect": "ba",
+   "check": "זוג בּ/ב"
+  },
+  {
+   "text": "בָ",
+   "kind": "syllable",
+   "expect": "va",
+   "check": "זוג בּ/ב"
+  },
+  {
+   "text": "כָּ",
+   "kind": "syllable",
+   "expect": "ka",
+   "check": "זוג כּ/כ"
+  },
+  {
+   "text": "כָ",
+   "kind": "syllable",
+   "expect": "kha",
+   "check": "זוג כּ/כ"
+  },
+  {
+   "text": "פָּ",
+   "kind": "syllable",
+   "expect": "pa",
+   "check": "זוג פּ/פ"
+  },
+  {
+   "text": "פָ",
+   "kind": "syllable",
+   "expect": "fa",
+   "check": "זוג פּ/פ"
+  },
+  {
+   "text": "שָׁ",
+   "kind": "syllable",
+   "expect": "sha",
+   "check": "זוג שׁ/שׂ"
+  },
+  {
+   "text": "שָׂ",
+   "kind": "syllable",
+   "expect": "sa",
+   "check": "זוג שׁ/שׂ"
+  },
+  {
+   "text": "ד",
+   "kind": "syllable",
+   "expect": "dalet",
+   "check": "אות בלי ניקוד נקראת בשמה"
+  }
+ ],
+ "sentences": [
+  {
+   "text": "דָג בַּיָם.",
+   "kind": "sentence",
+   "expect": "dag bayam"
+  },
+  {
+   "text": "צָב בַּגַן.",
+   "kind": "sentence",
+   "expect": "tsav bagan"
+  },
+  {
+   "text": "דָנָה שָׁרָה.",
+   "kind": "sentence",
+   "expect": "dana shara"
+  },
+  {
+   "text": "אַבָּא בָּא.",
+   "kind": "sentence",
+   "expect": "aba ba"
+  },
+  {
+   "text": "סַבָּא אָפָה חַלָה.",
+   "kind": "sentence",
+   "expect": "saba afa khala"
+  },
+  {
+   "text": "הַגָמָל אָכַל תָמָר.",
+   "kind": "sentence",
+   "expect": "hagamal akhal tamar"
+  },
+  {
+   "text": "הַצְרָצַר שָׁר בַּלַיְלָה.",
+   "kind": "sentence",
+   "expect": "hatsratsar shar balayla"
+  },
+  {
+   "text": "הָעַכְבָּר בָּרַח לָאַרְגָז.",
+   "kind": "sentence",
+   "expect": "haakhbar barakh laargaz"
+  },
+  {
+   "text": "דָנָה מָצְאָה מַתָנָה.",
+   "kind": "sentence",
+   "expect": "dana matsa matana"
+  },
+  {
+   "text": "הַבַּרְוָז שָׂחָה בַּיָם.",
+   "kind": "sentence",
+   "expect": "habarvaz sakha bayam"
+  }
+ ],
+ "instructions": [
+  {
+   "text": "קראו את המילה",
+   "kind": "ui",
+   "style": "instruction",
+   "expect": "kiru et hamila"
+  },
+  {
+   "text": "בחרו את התמונה המתאימה",
+   "kind": "ui",
+   "style": "instruction",
+   "expect": "bakharu et hatmuna hamatima"
+  },
+  {
+   "text": "סדרו את הצלילים למילה",
+   "kind": "ui",
+   "style": "instruction",
+   "expect": "sidru et hatslilim lamila"
+  },
+  {
+   "text": "הקשיבו טוב",
+   "kind": "ui",
+   "style": "instruction",
+   "expect": "hakshivu tov"
+  },
+  {
+   "text": "בואו נכיר מילה חדשה!",
+   "kind": "ui",
+   "style": "intro",
+   "expect": "bou nakir mila khadasha"
+  }
+ ],
+ "feedback": [
+  {
+   "text": "כל הכבוד!",
+   "kind": "ui",
+   "style": "praise",
+   "expect": "kol hakavod"
+  },
+  {
+   "text": "איזו קוראת!",
+   "kind": "ui",
+   "style": "praise",
+   "expect": "eizo koret"
+  },
+  {
+   "text": "כמעט! נסי שוב",
+   "kind": "ui",
+   "style": "encourage",
+   "expect": "kimat! nasi shuv"
+  },
+  {
+   "text": "לא נורא, ממשיכים!",
+   "kind": "ui",
+   "style": "correction",
+   "expect": "lo nora, mamshikhim"
+  },
+  {
+   "text": "עוד ניסיון קטן!",
+   "kind": "ui",
+   "style": "encourage",
+   "expect": "od nisayon katan"
+  }
+ ]
+}

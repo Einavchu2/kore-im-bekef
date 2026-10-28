@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>קוראים בכיף: בדיקת הקלטות והגייה</title>
+<style>
+@font-face{font-family:'Noto Sans Hebrew';src:url(fonts/noto-sans-hebrew.woff2) format('woff2');font-weight:100 900}
+:root{--bg:#F4F7FD;--card:#fff;--ink:#1F2A4D;--muted:#5D6A92;--line:#D6DFEE;--ok:#16884F;--bad:#C72F4F;--warn:#A86A00;--acc:#6B4FE0;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#141A2E;--card:#1F2744;--ink:#EEF2FF;--muted:#AAB4D6;--line:#33406B;--ok:#4BD08A;--bad:#FF7A93;--warn:#F2B451;--acc:#A792FF;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans Hebrew',Arial,sans-serif;font-size:15px;line-height:1.55}
+header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line);padding:10px 18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+header h1{font-size:19px;margin:0}
+nav button{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;padding:6px 12px;font:inherit;cursor:pointer}
+nav button[aria-pressed=true]{background:var(--acc);border-color:var(--acc);color:#fff}
+main{max-width:1100px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+h2{font-size:17px;margin:0 0 8px}
+button.b{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:4px 10px;cursor:pointer;white-space:nowrap}
+button.b:disabled{opacity:.45;cursor:not-allowed}
+button.primary{background:var(--acc);border-color:var(--acc);color:#fff}
+input,select{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:5px 8px}
+.muted{color:var(--muted)}.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+th,td{border-bottom:1px solid var(--line);padding:6px;text-align:right;vertical-align:middle}
+th{font-size:13px;color:var(--muted);font-weight:600}
+td.heb{font-size:24px;font-weight:700;white-space:nowrap}
+.pill{display:inline-block;border-radius:99px;padding:1px 9px;font-size:12px;border:1px solid currentColor}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+#toast{position:fixed;bottom:16px;left:16px;right:16px;max-width:520px;margin:auto;background:var(--ink);color:var(--bg);border-radius:10px;padding:10px 14px;display:none;z-index:9}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<header>
+  <h1>🔊 בדיקת הקלטות והגייה</h1>
+  <nav class="row" id="tabs" hidden>
+    <button data-tab="status" aria-pressed="true">מצב והגדרות</button>
+    <button data-tab="test">מבחן הגייה</button>
+    <button data-tab="items">פריטי לימוד</button>
+  </nav>
+  <span class="muted" id="who"></span>
+</header>
+<main>
+  <section id="login" class="card">
+    <h2>כניסה למבוגרים</h2>
+    <p class="muted">הסיסמה היא הערך של <code>TTS_ADMIN_PASSWORD</code> שהוגדר ב־Netlify.</p>
+    <div class="row"><input type="password" id="pw" placeholder="סיסמה" autocomplete="current-password"><button class="b primary" id="go">כניסה</button></div>
+    <p id="loginErr" class="bad"></p>
+  </section>
+
+  <section id="tab-status" class="hidden">
+    <div class="card"><h2>מצב</h2><div id="statusBox" class="grid"></div><div id="errBox"></div></div>
+    <div class="card">
+      <h2>קול ומהירות</h2>
+      <p class="muted">לפי התיעוד של Sonex, אין עדיין קול עברי מקורי: כל קול קורא עברית במבטא של השפה שבה הוקלט. למבטא ישראלי צריך לשכפל בלוח הבקרה של Sonex קול של דובר/ת עברית (10 שניות הקלטה, רק בהסכמת בעל/ת הקול). קול משוכפל יופיע ברשימה כאן. ה־API מאפשר לשלוט רק בקול ובמהירות, ולכן ה"סגנונות" נבדלים במהירות בלבד.</p>
+      <div class="row" style="margin:8px 0"><label>קול: <select id="voice"></select></label> <button class="b" id="preview">▶ דוגמה</button></div>
+      <div class="grid" id="speeds"></div>
+      <div class="row" style="margin-top:10px"><button class="b primary" id="saveCfg">שמירה</button><span class="muted">שמירה יוצרת גרסת הגדרות חדשה: משפטי ממשק ייווצרו מחדש בקול החדש. הקלטות לימוד מאושרות לא משתנות.</span></div>
+    </div>
+  </section>
+
+  <section id="tab-test" class="hidden">
+    <div class="card">
+      <h2>מבחן הגייה</h2>
+      <p class="muted">יש להאזין לכל פריט ולסמן אם נשמע כמו ה"צפוי". זו בדיקה ידנית: אין דרך אוטומטית לדעת אם ההגייה נכונה. פריטי לימוד שמתקבלים כאן אפשר לאשר מיד לשימוש באפליקציה.</p>
+      <div class="row"><button class="b" id="exportCsv">⬇️ ייצוא תוצאות (CSV)</button><span id="testSummary" class="muted"></span></div>
+    </div>
+    <div class="card tbl"><table id="testTbl"><thead><tr><th>טקסט</th><th>סוג</th><th>צפוי</th><th>מה בודקים</th><th></th><th>תוצאה</th><th>הערה</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section id="tab-items" class="hidden">
+    <div class="card">
+      <h2>פריטי לימוד</h2>
+      <p class="muted">אלה כל המילים, הצלילים והמשפטים שהאפליקציה יכולה להשמיע. פריט לימוד מושמע לילדים רק אחרי שמבוגר האזין ואישר אותו, או העלה הקלטה. "טקסט למנוע" הוא מה שנשלח למנוע הדיבור. הטקסט שהילד רואה לא משתנה.</p>
+      <div class="row">
+        <input id="q" placeholder="חיפוש">
+        <select id="fKind"><option value="">כל הסוגים</option><option value="word">מילה</option><option value="syllable">צליל</option><option value="sentence">משפט</option><option value="term">שם ניקוד</option></select>
+        <select id="fStat"><option value="">הכול</option><option value="no">לא מאושר</option><option value="yes">מאושר</option></select>
+        <button class="b" id="batch">🎧 יצירת דוגמאות לפריטים המסוננים</button><button class="b hidden" id="stop">⏹ עצירה</button>
+        <span id="itemsSummary" class="muted"></span>
+      </div>
+    </div>
+    <div class="card tbl"><table id="itemsTbl"><thead><tr><th>טקסט</th><th>סוג</th><th>שימושים</th><th>סטטוס</th><th>טקסט למנוע</th><th>פעולות</th></tr></thead><tbody></tbody></table></div>
+    <p class="muted" id="more"></p>
+  </section>
+</main>
+<div id="toast" role="status"></div>
+<iframe id="app" src="./" title="app" hidden></iframe>
+<input type="file" id="file" accept="audio/*" hidden>
+<script>
+const $=s=>document.querySelector(s);
+const KIND={word:'מילה',syllable:'צליל',sentence:'משפט',term:'שם ניקוד',ui:'ממשק'};
+const STYLE={word:'מילת לימוד',instruction:'הוראה',praise:'שבח',correction:'תיקון עדין',encourage:'עידוד',intro:'פתיחה'};
+let KEY=sessionStorage.getItem('ttsAdmin')||'';let approved={},overrides={},catalog=[],listened=new Set(),stopBatch=false;
+const toast=m=>{const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display='none',4500);};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function api(path,opt={}){
+  const r=await fetch('/api/tts-admin/'+path,{...opt,headers:{'x-admin-key':KEY,...(opt.json?{'content-type':'application/json'}:{}),...(opt.headers||{})},body:opt.json?JSON.stringify(opt.json):opt.body});
+  if(!r.ok){let e='http '+r.status;try{e=(await r.json()).error||e;}catch(_){}throw new Error(e);}
+  return (r.headers.get('content-type')||'').includes('json')?r.json():r.blob();
+}
+let player=new Audio();
+function playBlob(b){player.pause();player=new Audio(URL.createObjectURL(b));return player.play().catch(()=>toast('הדפדפן חסם השמעה. לחצו שוב.'));}
+const ERR={'quota-exhausted':'נגמרה המכסה ב־Sonex. אפשר לטעון קרדיט בלוח הבקרה של Sonex.','provider-auth':'מפתח ה־API לא תקין. בדקו את SONEX_API_KEY ב־Netlify.','provider-rate-limited':'יותר מדי בקשות. מחכים רגע ומנסים שוב.','provider-unavailable':'שירות הקול לא זמין כרגע.','tts-disabled':'לא הוגדר SONEX_API_KEY ב־Netlify.','no-candidate: generate and listen first':'קודם יוצרים דוגמה ומאזינים לה.','daily-limit':'הגעתם למגבלת היצירה היומית (TTS_DAILY_NEW_LIMIT).'};
+const errMsg=e=>ERR[e.message]||e.message;
+
+// ---------- login & tabs
+async function login(){
+  try{const st=await api('status');sessionStorage.setItem('ttsAdmin',KEY);$('#login').classList.add('hidden');$('#tabs').hidden=false;show('status');renderStatus(st);loadAll();}
+  catch(e){$('#loginErr').textContent=e.message==='unauthorized'?'סיסמה שגויה.':errMsg(e);}
+}
+$('#go').onclick=()=>{KEY=$('#pw').value;login();};$('#pw').onkeydown=e=>{if(e.key==='Enter')$('#go').click();};
+function show(t){document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tab===t));['status','test','items'].forEach(x=>$('#tab-'+x).classList.toggle('hidden',x!==t));if(t==='items')renderItems();if(t==='test')renderTest();}
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>show(b.dataset.tab));
+
+// ---------- status & config
+function renderStatus(st){
+  const cr=(st.balance?.credits||[]).find(c=>c.service==='tts');
+  const box=[['שירות קול',st.enabled?`<span class="ok">פעיל (${esc(st.provider)})</span>`:'<span class="bad">כבוי: חסר SONEX_API_KEY</span>'],
+    ['תווים חינמיים שנותרו',cr?Number(cr.available).toLocaleString('he-IL'):(st.balanceError?`<span class="warn">${esc(errMsg({message:st.balanceError}))}</span>`:'—')],
+    ['יתרת ארנק',st.balance?.wallet?`${st.balance.wallet.balance} ${st.balance.wallet.currency}`:'—'],
+    ['פריטי לימוד מאושרים',st.approvedCount],['משפטי ממשק חדשים היום',`${st.today.generated} מתוך ${st.today.dailyLimit}`],['תקלות היום',st.today.errors?`<span class="warn">${st.today.errors}</span>`:'0']];
+  $('#statusBox').innerHTML=box.map(([k,v])=>`<div><div class="muted">${k}</div><div style="font-size:18px">${v}</div></div>`).join('');
+  $('#errBox').innerHTML=st.recentErrors?.length?'<h2 style="margin-top:12px">תקלות אחרונות</h2>'+st.recentErrors.map(e=>`<div class="muted">${esc(e.at)} · ${esc(e.error)}${e.providerStatus?' · '+e.providerStatus:''}</div>`).join(''):'';
+  const sp=$('#speeds');sp.innerHTML='';
+  Object.keys(STYLE).forEach(k=>sp.insertAdjacentHTML('beforeend',`<label>${STYLE[k]}<br><input type="number" step="0.05" min="0.5" max="2" data-s="${k}" value="${st.config.speeds[k]}" style="width:90px"></label>`));
+  window.CFG=st.config;
+  if(st.enabled)api('voices').then(vs=>{const sel=$('#voice');sel.innerHTML='<option value="">ברירת המחדל של Sonex</option>'+vs.map(v=>`<option value="${esc(v.id)}">${esc(v.name)} · ${esc(v.language||'')}${v.type==='custom'?' · משוכפל':''}</option>`).join('');sel.value=st.config.voiceId||'';}).catch(e=>toast(errMsg(e)));
+}
+$('#saveCfg').onclick=async()=>{const speeds={};document.querySelectorAll('[data-s]').forEach(i=>speeds[i.dataset.s]=+i.value);
+  try{await api('config',{method:'POST',json:{voiceId:$('#voice').value||null,speeds}});toast('נשמר.');renderStatus(await api('status'));}catch(e){toast(errMsg(e));}};
+$('#preview').onclick=async()=>{try{const r=await fetch('/api/tts?kind=ui&style=intro&cv='+(CFG.version)+'&text='+encodeURIComponent('שלום! בואו נקרא יחד.'));if(!r.ok)throw new Error((await r.json()).error);playBlob(await r.blob());}catch(e){toast(errMsg(e));}};
+
+// ---------- data
+async function loadAll(){
+  const it=await api('items');approved=it.approved;overrides=it.overrides;
+  const fr=$('#app');const get=()=>{try{catalog=fr.contentWindow.buildSpeechCatalog();renderItems();}catch(e){setTimeout(get,500);}};
+  if(fr.contentWindow&&fr.contentWindow.buildSpeechCatalog)get();else fr.onload=get;
+}
+const keyOf=(t,k)=>k+'|'+t.normalize('NFC');
+async function candidate(text,kind){
+  const r=await api('candidate',{method:'POST',json:{text,kind}});
+  const b=await api(`audio?type=candidate&kind=${kind}&text=${encodeURIComponent(text)}`);
+  return {r,b};
+}
+async function approve(text,kind){const r=await api('approve',{method:'POST',json:{text,kind}});approved[keyOf(text,kind)]=r;}
+async function unapprove(text,kind){await api('unapprove',{method:'POST',json:{text,kind}});delete approved[keyOf(text,kind)];}
+function upload(text,kind){return new Promise(res=>{const f=$('#file');f.value='';f.onchange=async()=>{const file=f.files[0];if(!file)return;const fd=new FormData();fd.set('text',text);fd.set('kind',kind);fd.set('file',file);
+  try{const r=await api('upload',{method:'POST',body:fd});approved[keyOf(text,kind)]=r;toast('ההקלטה אושרה.');res(true);}catch(e){toast(errMsg(e));res(false);}};f.click();});}
+
+// ---------- test tab
+let TEST=null,results=JSON.parse(localStorage.getItem('ttsTestResults')||'{}');
+async function renderTest(){
+  if(!TEST)TEST=await (await fetch('tts-testset.json')).json();
+  const rows=[...TEST.words,...TEST.syllables,...TEST.sentences,...TEST.instructions,...TEST.feedback];
+  const tb=$('#testTbl tbody');tb.innerHTML='';
+  rows.forEach(x=>{
+    const id=keyOf(x.text,x.kind)+(x.style?'|'+x.style:'');const res=results[id]||{};const edu=x.kind!=='ui';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="heb">${esc(x.text)}</td><td>${KIND[x.kind]}${x.style?' · '+STYLE[x.style]:''}</td><td dir="ltr">${esc(x.expect)}</td><td class="muted">${esc(x.check||'')}</td>
+      <td class="row"><button class="b gen">▶ צור ושמע</button>${edu?'<button class="b apr" disabled>✓ אשר לשימוש</button>':''}<span class="info muted"></span></td>
+      <td><select class="res"><option value="">—</option><option value="pass">✓ נשמע נכון</option><option value="fail">✗ שגוי</option></select></td><td><input class="note" placeholder="מה שמעתם" value="${esc(res.note||'')}" style="width:150px"></td>`;
+    const sel=tr.querySelector('.res');sel.value=res.result||'';
+    const saveRes=()=>{results[id]={result:sel.value,note:tr.querySelector('.note').value,text:x.text,kind:x.kind,expect:x.expect,at:new Date().toISOString()};localStorage.setItem('ttsTestResults',JSON.stringify(results));sumTest(rows);};
+    sel.onchange=saveRes;tr.querySelector('.note').onchange=saveRes;
+    tr.querySelector('.gen').onclick=async e=>{const btn=e.target;btn.disabled=true;
+      try{ if(edu){const {r,b}=await candidate(x.text,x.kind);tr.querySelector('.info').textContent=`נשלח: ${r.sendText}${r.voiceFallback?' · ⚠️ הקול הנבחר לא נמצא, הושמע קול ברירת מחדל':''}${r.charsBilled?' · '+r.charsBilled+' תווים':''}`;await playBlob(b);tr.querySelector('.apr').disabled=false;}
+        else{const r=await fetch(`/api/tts?kind=ui&style=${x.style}&cv=${CFG.version}&text=${encodeURIComponent(x.text)}`);if(!r.ok)throw new Error((await r.json()).error);tr.querySelector('.info').textContent=r.headers.get('x-tts-source')==='cache'?'מהזיכרון':'נוצר עכשיו';await playBlob(await r.blob());}
+      }catch(err){toast(errMsg(err));}finally{btn.disabled=false;}};
+    if(edu)tr.querySelector('.apr').onclick=async()=>{try{await approve(x.text,x.kind);toast('אושר לשימוש באפליקציה.');}catch(err){toast(errMsg(err));}};
+    tb.append(tr);
+  });
+  sumTest(rows);
+}
+function sumTest(rows){const v=rows.map(x=>results[keyOf(x.text,x.kind)+(x.style?'|'+x.style:'')]?.result);$('#testSummary').textContent=`${rows.length} פריטים · ${v.filter(r=>r==='pass').length} נכונים · ${v.filter(r=>r==='fail').length} שגויים · ${v.filter(r=>!r).length} לא נבדקו`;}
+$('#exportCsv').onclick=()=>{const lines=[['text','kind','expected','result','note','checked_at']];Object.values(results).forEach(r=>lines.push([r.text,r.kind,r.expect,r.result,r.note,r.at]));
+  const csv='\ufeff'+lines.map(l=>l.map(c=>'"'+String(c??'').replace(/"/g,'""')+'"').join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='tts-pronunciation-results.csv';a.click();};
+
+// ---------- items tab
+function filtered(){const q=$('#q').value.trim(),k=$('#fKind').value,st=$('#fStat').value;
+  return catalog.filter(x=>(!k||x.kind===k)&&(!q||x.text.includes(q))&&(!st||(st==='yes')===!!approved[keyOf(x.text,x.kind)])).sort((a,b)=>b.uses-a.uses);}
+function renderItems(){
+  if(!catalog.length){$('#itemsSummary').textContent='טוען את רשימת הפריטים מהאפליקציה...';return;}
+  const list=filtered(),shown=list.slice(0,150);const tb=$('#itemsTbl tbody');tb.innerHTML='';
+  const apr=catalog.filter(x=>approved[keyOf(x.text,x.kind)]).length;
+  $('#itemsSummary').textContent=`${catalog.length} פריטים · ${apr} מאושרים · ${list.length} מוצגים בסינון`;
+  $('#more').textContent=list.length>150?`מוצגים 150 הראשונים (לפי שכיחות). צמצמו בחיפוש או בסינון.`:'';
+  shown.forEach(x=>{
+    const k=keyOf(x.text,x.kind);const a=approved[k];const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="heb">${esc(x.text)}</td><td>${KIND[x.kind]}</td><td>${x.uses}</td>
+      <td>${a?`<span class="pill ok">מאושר · ${a.source==='recording'?'הקלטה':'נוצר'}</span>`:'<span class="pill muted">לא מאושר</span>'}</td>
+      <td><input class="send" value="${esc(overrides[k]||'')}" placeholder="${x.kind==='syllable'?'כלל צליל אוטומטי':'כמו הטקסט'}" style="width:130px"> <button class="b sv">שמירה</button></td>
+      <td class="row"><button class="b gen">🎧 צור דוגמה</button><button class="b pc">▶ דוגמה</button><button class="b apr" ${listened.has(k)?'':'disabled'} title="אפשר לאשר רק אחרי האזנה">✓ אשר</button><button class="b up">⬆️ הקלטה</button>${a?'<button class="b pa">▶ המאושר</button><button class="b un">✗ בטל</button>':''}<span class="info muted"></span></td>`;
+    const info=tr.querySelector('.info');
+    tr.querySelector('.sv').onclick=async()=>{try{const r=await api('pronunciation',{method:'POST',json:{text:x.text,kind:x.kind,sendText:tr.querySelector('.send').value}});if(r.sendText===x.text)delete overrides[k];else overrides[k]=r.sendText;toast('נשמר. צרו דוגמה חדשה והאזינו.');listened.delete(k);renderItems();}catch(e){toast(errMsg(e));}};
+    tr.querySelector('.gen').onclick=async e=>{e.target.disabled=true;try{const {r,b}=await candidate(x.text,x.kind);info.textContent=`נשלח: ${r.sendText}${r.voiceFallback?' · ⚠️ קול ברירת מחדל':''}`;await playBlob(b);listened.add(k);tr.querySelector('.apr').disabled=false;}catch(err){toast(errMsg(err));}finally{e.target.disabled=false;}};
+    tr.querySelector('.pc').onclick=async()=>{try{await playBlob(await api(`audio?type=candidate&kind=${x.kind}&text=${encodeURIComponent(x.text)}`));listened.add(k);tr.querySelector('.apr').disabled=false;}catch(e){toast(e.message==='no-audio'?'עדיין אין דוגמה. לחצו "צור דוגמה".':errMsg(e));}};
+    tr.querySelector('.apr').onclick=async()=>{try{await approve(x.text,x.kind);toast('אושר.');renderItems();}catch(err){toast(errMsg(err));}};
+    tr.querySelector('.up').onclick=async()=>{if(await upload(x.text,x.kind))renderItems();};
+    if(a){tr.querySelector('.pa').onclick=async()=>{try{playBlob(await api(`audio?type=approved&kind=${x.kind}&text=${encodeURIComponent(x.text)}`));}catch(e){toast(errMsg(e));}};
+      tr.querySelector('.un').onclick=async()=>{if(!confirm('לבטל את האישור? הילדים לא ישמעו את הפריט עד שיאושר שוב.'))return;try{await unapprove(x.text,x.kind);renderItems();}catch(e){toast(errMsg(e));}};}
+    tb.append(tr);
+  });
+}
+['#q','#fKind','#fStat'].forEach(s=>$(s).oninput=renderItems);
+$('#batch').onclick=async()=>{
+  const list=filtered().filter(x=>!approved[keyOf(x.text,x.kind)]);
+  const chars=list.reduce((n,x)=>n+(overrides[keyOf(x.text,x.kind)]||x.text).length+(x.kind==='syllable'?1:0),0);
+  if(!list.length)return toast('אין פריטים לא מאושרים בסינון.');
+  if(!confirm(`ליצור דוגמאות ל־${list.length} פריטים? הערכה: כ־${chars.toLocaleString('he-IL')} תווים מהמכסה (סימני ניקוד נספרים כתווים). אחר כך צריך להאזין ולאשר כל פריט בנפרד.`))return;
+  stopBatch=false;$('#stop').classList.remove('hidden');let done=0,fail=0;
+  for(const x of list){if(stopBatch)break;try{await api('candidate',{method:'POST',json:{text:x.text,kind:x.kind}});done++;}catch(e){fail++;if(['quota-exhausted','provider-auth','tts-disabled','daily-limit'].includes(e.message)){toast(errMsg(e));break;}}
+    $('#itemsSummary').textContent=`נוצרו ${done} מתוך ${list.length}${fail?` · ${fail} נכשלו`:''}`;await new Promise(r=>setTimeout(r,600));}
+  $('#stop').classList.add('hidden');toast(`נוצרו ${done} דוגמאות. האזינו ואשרו כל פריט.`);
+};
+$('#stop').onclick=()=>stopBatch=true;
+if(KEY)login();
+</script>
+</body>
+</html>
