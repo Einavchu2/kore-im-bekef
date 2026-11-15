@@ -57,7 +57,7 @@ td.heb{font-size:24px;font-weight:700;white-space:nowrap}
     <div class="card"><h2>מצב</h2><div id="statusBox" class="grid"></div><div id="errBox"></div></div>
     <div class="card">
       <h2>קול ומהירות</h2>
-      <p class="muted">לפי התיעוד של Sonex, אין עדיין קול עברי מקורי: כל קול קורא עברית במבטא של השפה שבה הוקלט. למבטא ישראלי צריך לשכפל בלוח הבקרה של Sonex קול של דובר/ת עברית (10 שניות הקלטה, רק בהסכמת בעל/ת הקול). קול משוכפל יופיע ברשימה כאן. ה־API מאפשר לשלוט רק בקול ובמהירות, ולכן ה"סגנונות" נבדלים במהירות בלבד.</p>
+      <p class="muted" id="voiceNote">בוחרים קול מהרשימה, לוחצים <b>שמירה</b> ואז <b>▶ דוגמה</b>. הדוגמה משמיעה תמיד את הקול השמור. ב־Google כדאי להתחיל בקולות <b>Chirp 3 HD</b>, שהם הטבעיים ביותר. ה"סגנונות" (שבח, הוראה, עידוד) נבדלים במהירות בלבד.</p>
       <div class="row" style="margin:8px 0"><label>קול: <select id="voice"></select></label> <button class="b" id="preview">▶ דוגמה</button></div>
       <div class="grid" id="speeds"></div>
       <div class="row" style="margin-top:10px"><button class="b primary" id="saveCfg">שמירה</button><span class="muted">שמירה יוצרת גרסת הגדרות חדשה: משפטי ממשק ייווצרו מחדש בקול החדש. הקלטות לימוד מאושרות לא משתנות.</span></div>
@@ -106,7 +106,7 @@ async function api(path,opt={}){
 }
 let player=new Audio();
 function playBlob(b){player.pause();player=new Audio(URL.createObjectURL(b));return player.play().catch(()=>toast('הדפדפן חסם השמעה. לחצו שוב.'));}
-const ERR={'quota-exhausted':'נגמרה המכסה ב־Sonex. אפשר לטעון קרדיט בלוח הבקרה של Sonex.','provider-auth':'מפתח ה־API לא תקין. בדקו את SONEX_API_KEY ב־Netlify.','provider-rate-limited':'יותר מדי בקשות. מחכים רגע ומנסים שוב.','provider-unavailable':'שירות הקול לא זמין כרגע.','tts-disabled':'לא הוגדר SONEX_API_KEY ב־Netlify.','no-candidate: generate and listen first':'קודם יוצרים דוגמה ומאזינים לה.','daily-limit':'הגעתם למגבלת היצירה היומית (TTS_DAILY_NEW_LIMIT).'};
+const ERR={'quota-exhausted':'נגמרה המכסה אצל ספק הקול. בדקו את החשבון אצל הספק (Google Cloud או Sonex).','provider-auth':'מפתח ה־API לא תקין. בדקו את SONEX_API_KEY ב־Netlify.','provider-rate-limited':'יותר מדי בקשות. מחכים רגע ומנסים שוב.','provider-unavailable':'שירות הקול לא זמין כרגע.','tts-disabled':'לא הוגדר SONEX_API_KEY ב־Netlify.','no-candidate: generate and listen first':'קודם יוצרים דוגמה ומאזינים לה.','daily-limit':'הגעתם למגבלת היצירה היומית (TTS_DAILY_NEW_LIMIT).'};
 const errMsg=e=>ERR[e.message]||e.message;
 
 // ---------- login & tabs
@@ -122,15 +122,15 @@ document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>show(b.datase
 function renderStatus(st){
   const cr=(st.balance?.credits||[]).find(c=>c.service==='tts');
   const box=[['שירות קול',st.enabled?`<span class="ok">פעיל (${esc(st.provider)})</span>`:'<span class="bad">כבוי: חסר SONEX_API_KEY</span>'],
-    ['תווים חינמיים שנותרו',cr?Number(cr.available).toLocaleString('he-IL'):(st.balanceError?`<span class="warn">${esc(errMsg({message:st.balanceError}))}</span>`:'—')],
-    ['יתרת ארנק',st.balance?.wallet?`${st.balance.wallet.balance} ${st.balance.wallet.currency}`:'—'],
+    ['תווים חינמיים שנותרו',cr?Number(cr.available).toLocaleString('he-IL'):(st.balanceError?`<span class="warn">${esc(errMsg({message:st.balanceError}))}</span>`:(st.provider==='google'?'מוצג ב־Google Cloud Console':'—'))],
+    ...(st.provider==='google'?[]:[['יתרת ארנק',st.balance?.wallet?`${st.balance.wallet.balance} ${st.balance.wallet.currency}`:'—']]),
     ['פריטי לימוד מאושרים',st.approvedCount],['משפטי ממשק חדשים היום',`${st.today.generated} מתוך ${st.today.dailyLimit}`],['תקלות היום',st.today.errors?`<span class="warn">${st.today.errors}</span>`:'0']];
   $('#statusBox').innerHTML=box.map(([k,v])=>`<div><div class="muted">${k}</div><div style="font-size:18px">${v}</div></div>`).join('');
   $('#errBox').innerHTML=st.recentErrors?.length?'<h2 style="margin-top:12px">תקלות אחרונות</h2>'+st.recentErrors.map(e=>`<div class="muted">${esc(e.at)} · ${esc(e.error)}${e.providerStatus?' · '+e.providerStatus:''}</div>`).join(''):'';
   const sp=$('#speeds');sp.innerHTML='';
   Object.keys(STYLE).forEach(k=>sp.insertAdjacentHTML('beforeend',`<label>${STYLE[k]}<br><input type="number" step="0.05" min="0.5" max="2" data-s="${k}" value="${st.config.speeds[k]}" style="width:90px"></label>`));
   window.CFG=st.config;
-  if(st.enabled)api('voices').then(vs=>{const sel=$('#voice');sel.innerHTML='<option value="">ברירת המחדל של Sonex</option>'+vs.map(v=>`<option value="${esc(v.id)}">${esc(v.name)} · ${esc(v.language||'')}${v.type==='custom'?' · משוכפל':''}</option>`).join('');sel.value=st.config.voiceId||'';}).catch(e=>toast(errMsg(e)));
+  if(st.enabled)api('voices').then(vs=>{const sel=$('#voice');sel.innerHTML='<option value="">ברירת המחדל של הספק</option>'+vs.map(v=>`<option value="${esc(v.id)}">${esc(v.name)} · ${esc(v.language||'')}${v.type==='custom'?' · משוכפל':''}</option>`).join('');sel.value=st.config.voiceId||'';}).catch(e=>toast(errMsg(e)));
 }
 $('#saveCfg').onclick=async()=>{const speeds={};document.querySelectorAll('[data-s]').forEach(i=>speeds[i.dataset.s]=+i.value);
   try{await api('config',{method:'POST',json:{voiceId:$('#voice').value||null,speeds}});toast('נשמר.');renderStatus(await api('status'));}catch(e){toast(errMsg(e));}};

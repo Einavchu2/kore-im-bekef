@@ -41,7 +41,7 @@ export function createTTS({ store, provider, env = {}, now = () => Date.now() })
 
   async function getConfig() {
     const c = (await store.get("config", { type: "json" })) || {};
-    return { voiceId: c.voiceId || env.SONEX_VOICE_ID || null, speeds: { ...DEFAULT_SPEEDS, ...(c.speeds || {}) }, version: c.version || "1" };
+    return { voiceId: c.voiceId || env.TTS_VOICE_ID || null, speeds: { ...DEFAULT_SPEEDS, ...(c.speeds || {}) }, version: c.version || "1" };
   }
   async function getIndex() {
     return (await store.get("approved-index", { type: "json" })) || { version: "0", items: {} };
@@ -95,7 +95,7 @@ export function createTTS({ store, provider, env = {}, now = () => Date.now() })
     if (!provider) return json(503, { error: "tts-disabled" });
     const cfg = await getConfig();
     const speed = cfg.speeds[style] ?? 1;
-    const key = `gen/${sha(["ui", style, text, cfg.voiceId, speed].join("|"))}`;
+    const key = `gen/${sha(["ui", style, text, cfg.voiceId, speed, provider.name].join("|"))}`; // provider in the key: switching vendor never replays old clips
     const hit = await store.getWithMetadata(key, { type: "arrayBuffer" });
     if (hit && hit.data) return audioRes(hit.data, hit.metadata?.contentType, "cache", IMMUTABLE);
 

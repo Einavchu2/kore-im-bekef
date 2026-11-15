@@ -215,7 +215,20 @@ select{font:inherit;padding:4px;border-radius:8px}
   .small .slot .card,.small .tray .card{font-size:clamp(24px,6.8vw,34px);min-height:70px;min-width:0;padding:0 10px}
 }
 .card.locked{background:var(--slot);cursor:default}
+.demo-hand{position:fixed;z-index:90;font-size:64px;line-height:1;pointer-events:none;opacity:0;transform:translate(-30%,-8%);transition:left .6s ease-in-out,top .6s ease-in-out,opacity .3s;filter:drop-shadow(0 4px 4px rgba(0,0,0,.3))}
+.demo-hand.press{transform:translate(-30%,-8%) scale(.82)}
+.ripple{position:fixed;z-index:89;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;border:4px solid var(--purple);pointer-events:none;animation:ripple .6s ease-out forwards}
+@keyframes ripple{to{transform:scale(3.2);opacity:0}}
+.demo-ghost{position:fixed!important;z-index:88;pointer-events:none;margin:0;transition:left .9s ease-in-out,top .9s ease-in-out,opacity .3s;opacity:.85;transform:rotate(-3deg)}
+.demo-look{animation:look .9s ease-in-out}
+#stage .pic.demo-look{animation:lookpic .9s ease-in-out}
+@keyframes lookpic{50%{transform:scale(1.15)}}
+@keyframes look{50%{transform:scale(1.12);box-shadow:0 0 0 8px rgba(255,194,26,.6)}}
+.gone{opacity:.18!important;pointer-events:none;filter:grayscale(1);transform:scale(.92)}
+.hintpulse{animation:hintpulse 1.1s ease-in-out infinite;border-color:var(--yellow)!important}
+@keyframes hintpulse{50%{box-shadow:0 0 0 10px rgba(255,194,26,.55);transform:scale(1.05)}}
 @media (prefers-reduced-motion: reduce){
+  .hintpulse{animation:none;box-shadow:0 0 0 8px rgba(255,194,26,.7)}
   .buddy{animation:none}.confetti,.fw{display:none}.shake,.pop{animation:none}
 }
 </style>
@@ -228,6 +241,7 @@ select{font:inherit;padding:4px;border-radius:8px}
   <div class="tools">
     <div class="stars" id="stars">⭐ 0</div>
     <div class="iconbtns">
+      <button class="ib" id="helpBtn" aria-label="איך משחקים?" title="איך משחקים?" hidden>❓</button>
       <button class="ib" id="soundBtn" aria-label="קול">🔊</button>
       <button class="ib" id="homeBtn" aria-label="בית">🏠</button>
       <button class="ib" id="teachBtn" aria-label="מבוגרים">⚙️</button>
@@ -410,7 +424,7 @@ const AVATARS=[{e:'🦁',n:'ליאו'},{e:'🐱',n:'מיצי'},{e:'🦄',n:'קש
 const STICKERS='🌈🚀🍦🎈🦋🌻🐳🍉🎨🏆🌟🎠🦖🍭🛼🪁🎸🐙🌮🧁🦩🚂🍀🐞🎪🛸🌋🦜🏰👑'.match(/\p{Extended_Pictographic}/gu);
 
 /* ===================== Storage ===================== */
-const APP_VERSION='1.3.0';
+const APP_VERSION='1.4.0';
 // Retention: a child's data is kept for 7 days after their last use, then deleted automatically.
 const RETENTION_DAYS=7;
 const IS_PROD=document.documentElement.dataset.build==='prod';
@@ -586,7 +600,7 @@ const rnd=a=>a[Math.floor(Math.random()*a.length)];
 /* ===================== UI helpers ===================== */
 const stage=document.getElementById('stage');
 let NAV=0;
-function clearStage(){NAV++;stage.innerHTML='';stage.classList.remove('small');}
+function clearStage(){NAV++;if(typeof stopDemo==='function')stopDemo();CUR=null;const hb=document.getElementById('helpBtn');if(hb)hb.hidden=true;stage.innerHTML='';stage.classList.remove('small');}
 // like setTimeout, but dropped if the screen changed in the meantime
 function later(fn,ms){const t=NAV;window.setTimeout(()=>{if(t===NAV)fn();},ms);}
 function setBuddy(){document.getElementById('buddy').textContent=P()?P().avatar:'🦉';document.getElementById('stars').textContent='⭐ '+(P()?P().stars:0);}
@@ -650,8 +664,10 @@ R.tapAll=(ex,ctx)=>{
     const cards=[...grid.children];let ok=true;
     ex.cards.forEach((v,i)=>{const should=v===ex.tv;if(should!==sel.has(i)){ok=false;cards[i].classList.add('bad','shake');}});
     if(ok){cards.forEach((c,i)=>{if(ex.cards[i]===ex.tv)c.classList.add('ok');});ctx.win();}
-    else{if(ctx.miss())return;later(()=>cards.forEach((c,i)=>{c.classList.remove('bad','shake');if(sel.has(i)&&ex.cards[i]!==ex.tv){sel.delete(i);c.classList.remove('sel');}}),700);}
+    else{if(ctx.miss())return;later(()=>cards.forEach((c,i)=>{c.classList.remove('bad','shake');if(sel.has(i)&&ex.cards[i]!==ex.tv){sel.delete(i);c.classList.remove('sel');}
+      if(ctx.misses>=2&&ex.cards[i]===ex.tv&&!sel.has(i))c.classList.add('hintpulse');}),700);}
   };
+  ctx.hint=()=>{};
 };
 R.findOdd=(ex,ctx)=>{
   stage.append(header(`איזה כרטיס שונה מכל השאר?`));
@@ -709,11 +725,13 @@ R.sort=(ex,ctx)=>{
       if(closed||t.dataset.done)return;
       if(c===w.cat){t.dataset.done='1';t.remove();if(selected&&selected.t===t)selected=null;bins.querySelector(`[data-c="${c}"] .got`).append(el(`<span class="pop">${w.pic}</span>`));left--;
         if(left===0){closed=true;ctx.win();}else{sfx('yes');say(rnd(PRAISE())+` עוד ${left}`,null,'praise');}}
-      else{t.classList.add('shake');later(()=>t.classList.remove('shake'),500);if(ctx.miss())closed=true;}
+      else{t.classList.add('shake');later(()=>t.classList.remove('shake'),500);if(ctx.miss())closed=true;
+        else if(ctx.misses>=2){bins.querySelectorAll('.bin').forEach(x=>x.classList.remove('hintpulse'));bins.querySelector(`[data-c="${w.cat}"]`).classList.add('hintpulse');}}
     };
     makeDraggable(t,{onTap:()=>{speakEdu(w.word,'word');tray.querySelectorAll('.picTile').forEach(x=>x.classList.remove('sel'));t.classList.add('sel');selected={t,drop};},onDrop:x=>{const b=x&&x.closest('.bin');if(b)drop(b.dataset.c);}});
     tray.append(t);
   });
+  ctx.hint=()=>{};
   bins.querySelectorAll('.bin').forEach(b=>b.onclick=()=>{if(selected)selected.drop(b.dataset.c);else say(`קודם ${g('בחר','בחרי')} תמונה 🙂`);});
 };
 R.matchPic=(ex,ctx)=>{
@@ -757,6 +775,7 @@ R.build=(ex,ctx)=>{
   const slotRow=el(`<div class="slots"></div>`),tray=el(`<div class="tray"></div>`);
   stage.append(slotRow,tray);
   if(ex.hint&&!picBox.textContent){const hb=el(`<div class="row"><button class="btn ghostb small">💡 רמז</button></div>`);hb.querySelector('button').onclick=()=>{picBox.textContent=ex.w.pic;picBox.classList.add('pop');hb.remove();};stage.append(hb);}
+  ctx.hint=()=>{};
   const where=ti=>slots.indexOf(ti);
   function place(ti,si){if(finished||ti===lockTi||(lockTi>=0&&si===0))return;const cur=where(ti);if(cur>=0)slots[cur]=null;slots[si]=ti;sfx('tap');draw();check();}
   function unplace(ti){if(ti===lockTi)return;const cur=where(ti);if(cur>=0){slots[cur]=null;sfx('tap');draw();}}
@@ -772,7 +791,11 @@ R.build=(ex,ctx)=>{
     const cards=[...slotRow.querySelectorAll('.card')];
     vals.forEach((v,k)=>{if(v!==ex.answer[k])cards[k].classList.add('bad','shake');});
     if(ctx.miss()){finished=true;return;}
-    later(()=>{vals.forEach((v,k)=>{if(v!==ex.answer[k])slots[k]=null;});draw();},750);
+    if(!picBox.textContent){picBox.textContent=ex.w.pic;picBox.classList.add('pop');const hb=stage.querySelector('.btn.ghostb.small');if(hb&&hb.textContent.includes('רמז'))hb.parentElement.remove();}
+    later(()=>{vals.forEach((v,k)=>{if(v!==ex.answer[k])slots[k]=null;});
+      if(ctx.misses>=2){const k=slots.findIndex((t,i)=>t===null);const ti=ex.tiles.findIndex((t,i)=>t===ex.answer[k]&&!slots.includes(i));
+        if(k>=0&&ti>=0){slots[k]=ti;draw();const c=slotRow.children[k].querySelector('.card');if(c)c.classList.add('hintpulse');check();return;}}
+      draw();},750);
   }
   draw();
 };
@@ -823,13 +846,88 @@ function runEx(ex,opts,cb){
   if(opts.progress)stage.append(opts.progress);
   let first=true,closed=false;
   const ctx={
-    miss(){if(closed)return true;first=false;sfx('no');if(opts.placement){closed=true;say('לא נורא, ממשיכים! 🙂',null,'correction');later(()=>cb(false),1100);return true;}say(rnd(TRY()),null,'encourage');return false;},
+    misses:0,
+    get done(){return closed;},
+    assisted(){if(!closed)first=false;},
+    miss(){if(closed)return true;first=false;ctx.misses++;sfx('no');if(opts.placement){closed=true;say('לא נורא, ממשיכים! 🙂',null,'correction');later(()=>cb(false),1100);return true;}
+      if(ctx.misses>=2){const h=optionHint();if(h||ctx.hint){if(ctx.hint)ctx.hint();say(h==='last'?`💡 נשארה רק תשובה אחת. ${g('לחץ','לחצי')} עליה!`:`💡 הנה רמז קטן ${g('בשבילך','בשבילך')} 👀`,null,'encourage');return false;}}
+      say(rnd(TRY()),null,'encourage');return false;},
     win(extra,w){if(closed)return;closed=true;sfx('yes');if(first&&!opts.placement){P().stars++;save();setBuddy();checkSticker();}
       const msg=rnd(PRAISE())+(extra?' '+extra:'');say(msg,null,'praise');fireworks(first?3:1);
       if(!opts.placement&&w&&opts.read&&(ex.type==='build'||Math.random()<.4))later(()=>readAloud(w,()=>cb(first)),1300);
       else later(()=>cb(first),1400);}
   };
   R[ex.type](ex,ctx);
+  markOptions(ex);
+  CUR={ex,ctx};document.getElementById('helpBtn').hidden=false;
+  const p=P(),k=demoKey(ex);
+  if(p&&!(p.demos&&p.demos[k])){p.demos=p.demos||{};p.demos[k]=1;save();later(()=>playDemo(ex,ctx),700);}
+}
+let CUR=null;
+// Mark which answer button is correct, so hints can remove wrong ones (order matches the exercise data).
+function markOptions(ex){
+  const opts=[...stage.querySelectorAll('.opts .opt, .opts .card')];if(!opts.length)return;
+  const same=ex.type==='sameDiff'?((ex.a==='e')===(ex.b==='e')):null;
+  const ok=(el,i)=>({findOdd:()=>ex.cards[i]===ex.odd,findVowel:()=>ex.cards[i]===ex.ans,vowelName:()=>ex.opts[i]===ex.v,
+    sameDiff:()=>(el.dataset.v==='1')===same,hearPick:()=>ex.opts[i]===ex.ans,matchPic:()=>ex.opts[i]===ex.w.pic,
+    pickWord:()=>ex.opts[i]===ex.w.word,missing:()=>ex.opts[i]===ex.ans}[ex.type]||(()=>null))();
+  opts.forEach((el,i)=>{const v=ok(el,i);if(v!==null)el.dataset.ok=v?'1':'0';});
+}
+// After 2 mistakes: fade out one wrong answer. Returns 'last' when only the right one is left.
+function optionHint(){
+  const wrong=[...stage.querySelectorAll('[data-ok="0"]:not(.gone)')];if(!wrong.length)return null;
+  const w=wrong[Math.floor(Math.random()*wrong.length)];w.classList.add('gone');w.setAttribute('aria-disabled','true');
+  if(wrong.length===1){const r=stage.querySelector('[data-ok="1"]');if(r)r.classList.add('hintpulse');return 'last';}
+  return 'one';
+}
+
+/* ===================== "How to play" demo =====================
+   The first time a child meets each kind of exercise, a hand shows what to do (no reading or sound needed).
+   The ❓ button replays it. Any touch stops it. */
+const demoKey=ex=>ex.type+(ex.mode||'');
+let DEMO=0;
+function stopDemo(){DEMO++;document.querySelectorAll('.demo-hand,.demo-ghost,.ripple').forEach(x=>x.remove());document.querySelectorAll('.demo-look').forEach(x=>x.classList.remove('demo-look'));}
+window.addEventListener('pointerdown',e=>{if(!e.target.closest('#helpBtn'))stopDemo();},true);
+document.getElementById('helpBtn').onclick=()=>{if(CUR&&stage.contains(stage.querySelector('.opts,.tray,.grid,.bins')))playDemo(CUR.ex,CUR.ctx);};
+const ctr=el=>{const r=el.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2};};
+async function playDemo(ex,ctx){
+  if(ctx.done)return;
+  stopDemo();const my=++DEMO,nav=NAV;const alive=()=>my===DEMO&&nav===NAV;
+  const wait=ms=>new Promise(r=>window.setTimeout(r,ms));
+  const hand=document.createElement('div');hand.className='demo-hand';hand.textContent='👆';document.body.append(hand);
+  const st=ctr(stage);hand.style.left=st.x+'px';hand.style.top=(window.innerHeight-60)+'px';
+  await wait(30);if(!alive())return;hand.style.opacity=1;
+  const move=async(el,ms=650)=>{if(!el||!alive())return;const c=ctr(el);hand.style.left=c.x+'px';hand.style.top=(c.y+10)+'px';await wait(ms);};
+  const tap=async()=>{if(!alive())return;hand.classList.add('press');const r=document.createElement('div');r.className='ripple';r.style.left=hand.style.left;r.style.top=(parseFloat(hand.style.top)-10)+'px';document.body.append(r);await wait(380);hand.classList.remove('press');window.setTimeout(()=>r.remove(),600);await wait(200);};
+  const look=async el=>{if(!el||!alive())return;await move(el);el.classList.add('demo-look');await wait(900);el.classList.remove('demo-look');};
+  const drag=async(from,to)=>{if(!from||!to||!alive())return;await move(from);await tap();
+    const g=from.cloneNode(true);g.className=from.className+' demo-ghost';g.classList.remove('sel','used');const a=from.getBoundingClientRect();
+    Object.assign(g.style,{left:a.left+'px',top:a.top+'px',width:a.width+'px',height:a.height+'px'});document.body.append(g);await wait(30);
+    const b=to.getBoundingClientRect();g.style.left=(b.left+(b.width-a.width)/2)+'px';g.style.top=(b.top+(b.height-a.height)/2)+'px';
+    await move(to,900);await wait(500);g.style.opacity=0;await wait(300);g.remove();};
+  const target=stage.querySelector('.card.target,.circles')||stage.querySelector('main .pic, #stage > .pic');
+  try{
+    if(ex.type==='build'){
+      const slots=[...stage.querySelectorAll('.slot')];const si=slots.findIndex(x=>!x.children.length);
+      const want=ex.answer[si];const tile=[...stage.querySelectorAll('.tray .card:not(.used)')].find(c=>c.textContent===want);
+      if(target)await look(target);
+      if(tile&&slots[si]){ctx.assisted();await drag(tile,slots[si]);}
+    }else if(ex.type==='sort'){
+      const t=stage.querySelector('.sorttray .picTile');const w=t&&ex.items.find(i=>i.word===t.querySelector('.heb').textContent);
+      if(t&&w){ctx.assisted();await drag(t,stage.querySelector(`.bin[data-c="${w.cat}"]`));}
+    }else if(ex.type==='tapAll'){
+      if(target)await look(target);
+      const cards=[...stage.querySelectorAll('.grid .card')];for(const c of cards.slice(0,3)){await move(c,450);}
+      await move(stage.querySelector('.btn.green'));await tap();
+    }else{
+      if(target)await look(target);
+      const opts=[...stage.querySelectorAll('.opts .opt, .opts .card')];
+      for(const o of opts){await move(o,500);}
+      await move(stage.querySelector('.opts'),400);await tap();
+    }
+  }finally{
+    if(alive()){hand.style.opacity=0;await wait(300);}hand.remove();
+  }
 }
 function checkSticker(){const p=P();const have=Math.floor(p.stars/10);if(have>(p.stickers||0)){p.stickers=have;save();later(()=>{sfx('win');say(`מדבקה חדשה לאוסף! ${STICKERS[(have-1)%STICKERS.length]}`);},1500);}}
 
@@ -1076,7 +1174,7 @@ function renderReading(item,o,done){
   clearStage();stage.classList.remove('small');
   if(o.total)stage.append(dots(o.total,o.idx));
   const what={words:'את המילה',phrases:'את המילים',short:'את המשפט',long:'את המשפט',page:'את העמוד'}[o.kind];
-  say(`${g('קרא','קראי')} ${what}. ${o.idx===0?'אפשר ללחוץ על מילה כדי לשמוע אותה 👆':''}`);
+  say(`${g('קרא','קראי')} ${what}. ${o.idx===0&&voiceOn()?'אפשר ללחוץ על מילה כדי לשמוע אותה 👆':''}`);
   if(o.kind==='page')stage.append(el(`<div class="pic">${item.pic}</div>`));
   const box=el(`<div class="readbox ${o.kind}"></div>`);const spans=[];
   const parts=wordSpans(item.text);
@@ -1201,7 +1299,7 @@ function screenTeacher(){
   ORDER.forEach(o=>lg.append(el(`<p><span class="dot" style="background:${GROUPS[o].color};margin:0 0 0 6px"></span><b>${GROUPS[o].name}</b> (${POOLS[o].length} תרגילים): ${GROUPS[o].adult}</p>`)));
   lg.append(el(`<p><b>שיבוץ ומעבר קבוצה:</b> משחק ההיכרות מתאים את עצמו לילד/ה (עד 10 שאלות, מתחיל ברמה הכחולה ועולה או יורד). אחרי השיבוץ הילד/ה מתרגל/ת ברמה שלו/ה: סבב ראשון של 20 תרגילים, ואחריו סבבים של 15. בכל קבוצה יש 3,200 תרגילים שונים. תרגיל שילד/ה פתר/ה נכון בניסיון הראשון פעמיים נחשב "נשלט" ולא מוצג לו/ה שוב. מעבר לקבוצה הבאה <b>מוצע</b> רק אחרי 40 תרגילים לפחות בקבוצה, כש־20 התרגילים האחרונים נפתרו כולם בלי טעות. הילד/ה יכול/ה לבחור "עוד קצת כאן", וההצעה תחזור אחרי 10 תרגילים נוספים בלי טעות. אפשר לשנות קבוצה ידנית בטבלה.</p>`));
   lg.append(el(`<p><b>קריאה בקול:</b> אחרי בניית מילה הילד/ה מתבקש/ת לקרוא אותה. בדפדפן שתומך בזיהוי דיבור (בעיקר Chrome) אפשר לקרוא למיקרופון ולקבל כוכב בונוס; אחרת יש כפתור "קראתי בקול".</p>`));
-  lg.append(el(`<p><b>לומדים לקרוא (מסלול נפרד):</b> מסלול שמותאם לקבוצה של הילד/ה: קריאת מילים, צירופים של שתי מילים, משפטים קצרים, משפטים ארוכים, ובסוף ספר קצר עם שאלות הבנה. כל תחנה נפתחת אחרי שמסיימים את הקודמת. אפשר ללחוץ על מילה ולשמוע אותה, לחלק מילים להברות בצבעים, ולשמוע הקראה עם הדגשה של כל מילה. אחרי משפט יש שאלת הבנה (התאמה לתמונה). הכתומה והכחולה קוראות במסלול א׳, הירוקה בב׳, הצהובה בג׳ והסגולה בד׳ (שני ספרים).</p>`));
+  lg.append(el(`<p><b>לומדים לקרוא (מסלול נפרד):</b> מסלול שמותאם לקבוצה של הילד/ה: קריאת מילים, צירופים של שתי מילים, משפטים קצרים, משפטים ארוכים, ובסוף ספר קצר עם שאלות הבנה. כל תחנה נפתחת אחרי שמסיימים את הקודמת. אפשר לחלק מילים להברות בצבעים, וכשהקול המדבר פעיל גם ללחוץ על מילה ולשמוע אותה ולשמוע הקראה עם הדגשה של כל מילה. אחרי משפט יש שאלת הבנה (התאמה לתמונה). הכתומה והכחולה קוראות במסלול א׳, הירוקה בב׳, הצהובה בג׳ והסגולה בד׳ (שני ספרים).</p>`));
   lg.append(el(`<p><b>שמירה:</b> הנתונים נשמרים במכשיר הזה בלבד, ונמחקים אוטומטית 7 ימים אחרי השימוש האחרון של כל ילד/ה.</p>`));
   panel.append(lg);
   const set=el(`<div style="margin-top:16px"><h2 style="font-size:22px;text-align:right">הגדרות ונתונים</h2></div>`);
