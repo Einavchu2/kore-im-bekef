@@ -424,7 +424,7 @@ const AVATARS=[{e:'🦁',n:'ליאו'},{e:'🐱',n:'מיצי'},{e:'🦄',n:'קש
 const STICKERS='🌈🚀🍦🎈🦋🌻🐳🍉🎨🏆🌟🎠🦖🍭🛼🪁🎸🐙🌮🧁🦩🚂🍀🐞🎪🛸🌋🦜🏰👑'.match(/\p{Extended_Pictographic}/gu);
 
 /* ===================== Storage ===================== */
-const APP_VERSION='1.4.0';
+const APP_VERSION='1.4.1';
 // Retention: a child's data is kept for 7 days after their last use, then deleted automatically.
 const RETENTION_DAYS=7;
 const IS_PROD=document.documentElement.dataset.build==='prod';
@@ -478,7 +478,7 @@ const Speech=(()=>{
     }catch(e){stats.lastError='init: '+(e.name||e);}
     finally{ready=true;}
   }
-  const eduFallback=()=>DB.eduFallback||'device';
+  const eduFallback=()=>DB.eduFallback||(mode==='server'?'none':'device');
   function canPlayEdu(text,kind){
     if(!voiceOn())return false;
     if(mode==='server'&&approved.has(eduKey(text,kind)))return true;
@@ -542,7 +542,7 @@ const Speech=(()=>{
     await deviceSay(edu&&it.kind==='syllable'?sylSound(text):text,STYLE_DEVICE_RATE[style]||.9,it.onstart);
   }
   let missingShown=0;
-  function noteMissing(kind){if(Date.now()-missingShown<20000)return;missingShown=Date.now();const b=document.getElementById('bubble');if(b)b.textContent=`🔇 ${{syllable:'לצליל הזה',sentence:'למשפט הזה',term:'לשם הניקוד הזה'}[kind]||'למילה הזו'} עוד אין קול. אפשר להמשיך 🙂`;}
+  function noteMissing(kind){if(!DB.eduFallback||Date.now()-missingShown<20000)return;missingShown=Date.now();const b=document.getElementById('bubble');if(b)b.textContent=`🔇 ${{syllable:'לצליל הזה',sentence:'למשפט הזה',term:'לשם הניקוד הזה'}[kind]||'למילה הזו'} עוד אין קול. אפשר להמשיך 🙂`;}
   async function play(items){
     stop();const my=seq;if(!voiceOn())return;
     for(const it of items){if(my!==seq)return;await playOne(it,my);}
@@ -553,7 +553,7 @@ const Speech=(()=>{
 function speakUI(parts,style='instruction'){Speech.play([].concat(parts).filter(Boolean).map(t=>({text:t,kind:'ui',style})));}
 // Educational speech: a display text (or several) of one kind
 function speakEdu(texts,kind){Speech.play([].concat(texts).filter(Boolean).map(t=>({text:t,kind:kind||kindOf(t)})));}
-function voiceOn(){return !!DB.voice&&!!DB.sound;}
+function voiceOn(){return !!(DB.voice??(Speech.mode==='server'))&&!!DB.sound;}
 function canHear(){return voiceOn()&&(Speech.mode==='server'||'speechSynthesis' in window);}
 function canHearEdu(text,kind){return Speech.canPlayEdu(cleanSpeech(text),kind||kindOf(text));}
 let lastSpeech=[],lastStyle='instruction';
@@ -1307,9 +1307,9 @@ function screenTeacher(){
   const mic=el(`<label style="display:flex;gap:10px;align-items:center;font-size:16px;margin:8px 0"><input type="checkbox" style="width:22px;height:22px" ${micOn()?'checked':''} ${SR?'':'disabled'}> זיהוי קריאה בקול במיקרופון ${SR?'':'(לא נתמך בדפדפן הזה)'}</label>`);
   mic.querySelector('input').onchange=e=>{DB.mic=e.target.checked;save();};
   set.append(mic,el(`<p style="font-size:14px;margin:0 0 10px" class="muted">בדפדפנים כמו Chrome, זיהוי הדיבור מתבצע בשרתי יצרן הדפדפן. כשהאפשרות כבויה, הילדים מסמנים "קראתי בקול" בעצמם.</p>`));
-  const vo=el(`<label style="display:flex;gap:10px;align-items:center;font-size:16px;margin:8px 0"><input type="checkbox" style="width:22px;height:22px" ${DB.voice?'checked':''}> קול מדבר (הקראת הוראות ומילים)</label>`);
+  const vo=el(`<label style="display:flex;gap:10px;align-items:center;font-size:16px;margin:8px 0"><input type="checkbox" style="width:22px;height:22px" ${voiceOn()?'checked':''}> קול מדבר (הקראת הוראות ומילים)</label>`);
   vo.querySelector('input').onchange=e=>{DB.voice=e.target.checked;save();screenTeacher();};
-  set.append(vo,el(`<p class="muted" style="font-size:14px;margin:0 0 6px">כבוי כרגע: התרגילים מבוססים על קריאה, תמונות וסידור, בלי שמיעה. מנגינות העידוד פועלות לפי כפתור 🔊 למעלה.</p>`));
+  set.append(vo,el(`<p class="muted" style="font-size:14px;margin:0 0 6px">${voiceOn()?'דלוק: הוראות ומשוב מוקראים. מילים וצלילים ללימוד מוקראים רק אחרי אישור בדף בדיקת ההקלטות.':'כבוי: התרגילים מבוססים על קריאה, תמונות וסידור, בלי שמיעה.'} מנגינות העידוד פועלות לפי כפתור 🔊 למעלה.</p>`));
   const sp=el(`<div style="margin:12px 0;${DB.voice?'':'display:none'}"><h3 style="font-size:18px;margin:6px 0">קול</h3>
     <label style="display:block;font-size:16px;margin:6px 0">מהירות דיבור: <input type="range" min="0.7" max="1.2" step="0.05" value="${DB.rate||1}" style="vertical-align:middle;width:160px"> <span></span></label>
     <label style="display:block;font-size:16px;margin:6px 0">מילים, צלילים ומשפטים ללימוד שאין להם עדיין הקלטה מאושרת:
@@ -1317,7 +1317,7 @@ function screenTeacher(){
     <p class="muted" style="font-size:14px;margin:4px 0"></p></div>`);
   const [rng,sel]=[sp.querySelector('input'),sp.querySelector('select')];const rl=sp.querySelector('label span');
   rl.textContent='×'+(+rng.value).toFixed(2);rng.oninput=()=>{DB.rate=+rng.value;rl.textContent='×'+DB.rate.toFixed(2);save();};
-  sel.value=DB.eduFallback||'device';sel.onchange=()=>{DB.eduFallback=sel.value;save();};
+  sel.value=DB.eduFallback||(Speech.mode==='server'?'none':'device');sel.onchange=()=>{DB.eduFallback=sel.value;save();};
   sp.querySelector('p').textContent=Speech.mode==='server'
     ?`מקור הקול: שרת הקול של האתר. ${Speech.approvedCount} פריטי לימוד עם הקלטה מאושרת. בקשות: ${Speech.stats.requests}, מהזיכרון: ${Speech.stats.cacheHits}, תקלות: ${Speech.stats.failures}${Speech.stats.lastError?' (אחרונה: '+Speech.stats.lastError+')':''}.`
     :'מקור הקול: הקול המובנה של המכשיר (אין חיבור לשרת קול).';
@@ -1351,7 +1351,7 @@ if(IS_PROD&&'serviceWorker' in navigator&&(location.protocol==='https:'||locatio
   window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
   if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
 }
-Speech.init();
+Speech.init().then(()=>{if(Speech.mode==='server'&&voiceOn()&&lastSpeech.length)speakUI(lastSpeech,lastStyle);});
 drawSound();setBuddy();
 screenName();
 </script>
