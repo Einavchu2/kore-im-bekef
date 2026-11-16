@@ -60,6 +60,9 @@ td.heb{font-size:24px;font-weight:700;white-space:nowrap}
       <p class="muted" id="voiceNote">בוחרים קול מהרשימה, לוחצים <b>שמירה</b> ואז <b>▶ דוגמה</b>. הדוגמה משמיעה תמיד את הקול השמור. ב־Google כדאי להתחיל בקולות <b>Chirp 3 HD</b>, שהם הטבעיים ביותר. ה"סגנונות" (שבח, הוראה, עידוד) נבדלים במהירות בלבד.</p>
       <div class="row" style="margin:8px 0"><label>קול: <select id="voice"></select></label> <button class="b" id="preview">▶ דוגמה</button></div>
       <div class="grid" id="speeds"></div>
+      <div class="row" style="margin-top:10px"><label>מילים ומשפטים ללימוד נשלחים למנוע: <select id="niq">
+        <option value="strip">בלי ניקוד (מומלץ: נשמע טבעי יותר)</option><option value="keep">עם ניקוד מלא</option></select></label></div>
+      <p class="muted" style="margin:4px 0 0">הילדים תמיד רואים את המילה עם הניקוד. ההגדרה משנה רק את מה שנשלח לקול. בניקוד מלא, מילים ארוכות נטו להיקרא הברה־הברה ("בַּ נָ נָה"). צליל בודד כמו דָ נשלח תמיד עם הניקוד שלו. מילה דו־משמעית בלי ניקוד (סֵפֶר / סַפָּר) מתקנים בשדה "טקסט למנוע" שלה.</p>
       <div class="row" style="margin-top:10px"><button class="b primary" id="saveCfg">שמירה</button><span class="muted">שמירה יוצרת גרסת הגדרות חדשה: משפטי ממשק ייווצרו מחדש בקול החדש. הקלטות לימוד מאושרות לא משתנות.</span></div>
     </div>
   </section>
@@ -129,11 +132,11 @@ function renderStatus(st){
   $('#errBox').innerHTML=st.recentErrors?.length?'<h2 style="margin-top:12px">תקלות אחרונות</h2>'+st.recentErrors.map(e=>`<div class="muted">${esc(e.at)} · ${esc(e.error)}${e.providerStatus?' · '+e.providerStatus:''}</div>`).join(''):'';
   const sp=$('#speeds');sp.innerHTML='';
   Object.keys(STYLE).forEach(k=>sp.insertAdjacentHTML('beforeend',`<label>${STYLE[k]}<br><input type="number" step="0.05" min="0.5" max="2" data-s="${k}" value="${st.config.speeds[k]}" style="width:90px"></label>`));
-  window.CFG=st.config;
+  window.CFG=st.config;$('#niq').value=st.config.niqqud||'strip';
   if(st.enabled)api('voices').then(vs=>{const sel=$('#voice');sel.innerHTML='<option value="">ברירת המחדל של הספק</option>'+vs.map(v=>`<option value="${esc(v.id)}">${esc(v.name)} · ${esc(v.language||'')}${v.type==='custom'?' · משוכפל':''}</option>`).join('');sel.value=st.config.voiceId||'';}).catch(e=>toast(errMsg(e)));
 }
 $('#saveCfg').onclick=async()=>{const speeds={};document.querySelectorAll('[data-s]').forEach(i=>speeds[i.dataset.s]=+i.value);
-  try{await api('config',{method:'POST',json:{voiceId:$('#voice').value||null,speeds}});toast('נשמר.');renderStatus(await api('status'));}catch(e){toast(errMsg(e));}};
+  try{await api('config',{method:'POST',json:{voiceId:$('#voice').value||null,speeds,niqqud:$('#niq').value}});toast('נשמר.');renderStatus(await api('status'));}catch(e){toast(errMsg(e));}};
 $('#preview').onclick=async()=>{try{const r=await fetch('/api/tts?kind=ui&style=intro&cv='+(CFG.version)+'&text='+encodeURIComponent('שלום! בואו נקרא יחד.'));if(!r.ok)throw new Error((await r.json()).error);playBlob(await r.blob());}catch(e){toast(errMsg(e));}};
 
 // ---------- data
@@ -163,13 +166,19 @@ async function renderTest(){
     const id=keyOf(x.text,x.kind)+(x.style?'|'+x.style:'');const res=results[id]||{};const edu=x.kind!=='ui';
     const tr=document.createElement('tr');
     tr.innerHTML=`<td class="heb">${esc(x.text)}</td><td>${KIND[x.kind]}${x.style?' · '+STYLE[x.style]:''}</td><td dir="ltr">${esc(x.expect)}</td><td class="muted">${esc(x.check||'')}</td>
-      <td class="row"><button class="b gen">▶ צור ושמע</button>${edu?'<button class="b apr" disabled>✓ אשר לשימוש</button>':''}<span class="info muted"></span></td>
+      <td><div class="row"><button class="b gen">▶ צור ושמע</button>${edu?'<button class="b apr" disabled>✓ אשר לשימוש</button>':''}</div>
+        ${edu?`<div class="row" style="margin-top:6px"><input class="send" value="${esc(overrides[keyOf(x.text,x.kind)]||'')}" placeholder="תיקון היגוי" title="טקסט שנשלח לקול במקום ברירת המחדל (${x.kind==='syllable'?'כלל צליל אוטומטי':(CFG.niqqud==='keep'?'כמו הטקסט':'בלי ניקוד')}). הילד ממשיך לראות את המילה המקורית." style="width:130px"><button class="b sv">שמירה</button></div>`:''}
+        <span class="info muted"></span></td>
       <td><select class="res"><option value="">—</option><option value="pass">✓ נשמע נכון</option><option value="fail">✗ שגוי</option></select></td><td><input class="note" placeholder="מה שמעתם" value="${esc(res.note||'')}" style="width:150px"></td>`;
     const sel=tr.querySelector('.res');sel.value=res.result||'';
     const saveRes=()=>{results[id]={result:sel.value,note:tr.querySelector('.note').value,text:x.text,kind:x.kind,expect:x.expect,at:new Date().toISOString()};localStorage.setItem('ttsTestResults',JSON.stringify(results));sumTest(rows);};
     sel.onchange=saveRes;tr.querySelector('.note').onchange=saveRes;
+    if(edu)tr.querySelector('.sv').onclick=async()=>{const k=keyOf(x.text,x.kind);
+      try{const r=await api('pronunciation',{method:'POST',json:{text:x.text,kind:x.kind,sendText:tr.querySelector('.send').value}});
+        if(r.sendText===x.text)delete overrides[k];else overrides[k]=r.sendText;tr.querySelector('.apr').disabled=true;
+        tr.querySelector('.info').textContent='נשמר. לחצו "צור ושמע" כדי לשמוע את הגרסה החדשה.';}catch(e){toast(errMsg(e));}};
     tr.querySelector('.gen').onclick=async e=>{const btn=e.target;btn.disabled=true;
-      try{ if(edu){const {r,b}=await candidate(x.text,x.kind);tr.querySelector('.info').textContent=`נשלח: ${r.sendText}${r.voiceFallback?' · ⚠️ הקול הנבחר לא נמצא, הושמע קול ברירת מחדל':''}${r.charsBilled?' · '+r.charsBilled+' תווים':''}`;await playBlob(b);tr.querySelector('.apr').disabled=false;}
+      try{ if(edu){const {r,b}=await candidate(x.text,x.kind);tr.querySelector('.info').textContent=`נשלח: ${r.sendText}${r.rule==='override'?' (תיקון ידני)':''}${r.voiceFallback?' · ⚠️ הקול הנבחר לא נמצא, הושמע קול ברירת מחדל':''}${r.charsBilled?' · '+r.charsBilled+' תווים':''}`;await playBlob(b);tr.querySelector('.apr').disabled=false;}
         else{const r=await fetch(`/api/tts?kind=ui&style=${x.style}&cv=${CFG.version}&text=${encodeURIComponent(x.text)}`);if(!r.ok)throw new Error((await r.json()).error);tr.querySelector('.info').textContent=r.headers.get('x-tts-source')==='cache'?'מהזיכרון':'נוצר עכשיו';await playBlob(await r.blob());}
       }catch(err){toast(errMsg(err));}finally{btn.disabled=false;}};
     if(edu)tr.querySelector('.apr').onclick=async()=>{try{await approve(x.text,x.kind);toast('אושר לשימוש באפליקציה.');}catch(err){toast(errMsg(err));}};
@@ -194,7 +203,7 @@ function renderItems(){
     const k=keyOf(x.text,x.kind);const a=approved[k];const tr=document.createElement('tr');
     tr.innerHTML=`<td class="heb">${esc(x.text)}</td><td>${KIND[x.kind]}</td><td>${x.uses}</td>
       <td>${a?`<span class="pill ok">מאושר · ${a.source==='recording'?'הקלטה':'נוצר'}</span>`:'<span class="pill muted">לא מאושר</span>'}</td>
-      <td><input class="send" value="${esc(overrides[k]||'')}" placeholder="${x.kind==='syllable'?'כלל צליל אוטומטי':'כמו הטקסט'}" style="width:130px"> <button class="b sv">שמירה</button></td>
+      <td><input class="send" value="${esc(overrides[k]||'')}" placeholder="${x.kind==='syllable'?'כלל צליל אוטומטי':(CFG.niqqud==='keep'?'כמו הטקסט':'בלי ניקוד (אוטומטי)')}" style="width:130px"> <button class="b sv">שמירה</button></td>
       <td class="row"><button class="b gen">🎧 צור דוגמה</button><button class="b pc">▶ דוגמה</button><button class="b apr" ${listened.has(k)?'':'disabled'} title="אפשר לאשר רק אחרי האזנה">✓ אשר</button><button class="b up">⬆️ הקלטה</button>${a?'<button class="b pa">▶ המאושר</button><button class="b un">✗ בטל</button>':''}<span class="info muted"></span></td>`;
     const info=tr.querySelector('.info');
     tr.querySelector('.sv').onclick=async()=>{try{const r=await api('pronunciation',{method:'POST',json:{text:x.text,kind:x.kind,sendText:tr.querySelector('.send').value}});if(r.sendText===x.text)delete overrides[k];else overrides[k]=r.sendText;toast('נשמר. צרו דוגמה חדשה והאזינו.');listened.delete(k);renderItems();}catch(e){toast(errMsg(e));}};

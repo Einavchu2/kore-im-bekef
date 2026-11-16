@@ -1,9 +1,13 @@
 // Display text -> text sent to the speech engine.
 // The display text (exact spelling + approved niqqud) is never changed; only the engine input may differ.
-// Order: adult-approved override (saved from the review page) > built-in rule for single-letter syllables > the text itself.
+// Order: adult-approved override (saved from the review page) > built-in rule for single-letter syllables
+//        > niqqud setting (default: send words without niqqud, see below) > the text itself.
 const KAMATZ = "\u05B8", PATACH = "\u05B7", SHVA = "\u05B0", SEGOL = "\u05B6";
 const NIQQUD = /[\u0591-\u05C7]/g;
 export const strip = (s) => s.replace(NIQQUD, "");
+// Vowel points, dagesh and shin/sin dots only. Keeps the maqaf (־), so joined words stay apart.
+const POINTS = /[\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7]/g;
+export const stripPoints = (s) => s.replace(POINTS, "");
 
 // Letter names, for a bare consonant that cannot be pronounced on its own.
 export const LETTER_NAMES = {
@@ -30,12 +34,22 @@ export function syllableRule(u) {
   return LETTER_NAMES[strip(u)] || u;
 }
 
-export function engineText(text, kind, overrides = {}) {
+// niqqud: "strip" (default) or "keep".
+// Tested with Google's Hebrew voices: fully pointed multi-syllable words were read syllable by syllable
+// ("ta mar", "ba na na", "de vash"), while short words were fine. The voices are trained on unpointed text,
+// so words, sentences and vowel names are sent without niqqud. A lone syllable keeps its vowel: without it
+// there is nothing to say. Every learning item is still heard and approved by an adult before children hear it,
+// and an override per item can put the niqqud back where an unpointed word is ambiguous (e.g. סֵפֶר / סַפָּר).
+export function engineText(text, kind, overrides = {}, { niqqud = "strip" } = {}) {
   const key = `${kind}|${text}`;
   if (overrides[key]) return { sendText: overrides[key], rule: "override" };
   if (kind === "syllable") {
     const t = syllableRule(text);
     return { sendText: t, rule: t === text ? "as-is" : "syllable-rule" };
+  }
+  if (niqqud === "strip") {
+    const t = stripPoints(text);
+    return { sendText: t, rule: t === text ? "as-is" : "no-niqqud" };
   }
   return { sendText: text, rule: "as-is" };
 }

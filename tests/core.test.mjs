@@ -159,3 +159,27 @@ test("approved audio is served even when the API key is removed", async () => {
   assert.equal(r.status, 200);
   assert.equal((await noKey.handlePublic(new Request("https://x.test" + q({ kind: "ui", text: "שלום" })))).status, 503);
 });
+
+test("words, sentences and vowel names go to the engine without niqqud by default", async () => {
+  const { admin, provider } = setup();
+  for (const [text, kind, sent] of [["בַּנָנָה", "word", "בננה"], ["דְבַשׁ", "word", "דבש"], ["דָג בַּיָם.", "sentence", "דג בים."], ["קָמָץ", "term", "קמץ"]]) {
+    const c = await (await admin("candidate", { text, kind })).json();
+    assert.equal(c.sendText, sent); assert.equal(c.rule, "no-niqqud"); assert.equal(c.key, `${kind}|${text}`, "the key keeps the pointed text");
+  }
+  assert.equal(provider.calls.at(-1).text, "קמץ");
+});
+
+test("a lone syllable keeps its vowel; an override still wins; maqaf survives", () => {
+  assert.equal(engineText("דָ", "syllable").sendText, "דָה");
+  assert.equal(engineText("סֵפֶר", "word", { "word|סֵפֶר": "סֵפֶר." }).sendText, "סֵפֶר.");
+  assert.equal(engineText("חַג־שָׂמֵחַ", "sentence").sendText, "חג־שמח");
+});
+
+test("the niqqud setting can be switched to keep, and is validated", async () => {
+  const { admin } = setup();
+  assert.equal((await admin("config", { niqqud: "maybe" })).status, 422);
+  await admin("config", { niqqud: "keep" });
+  const c = await (await admin("candidate", { text: "תָמָר", kind: "word" })).json();
+  assert.equal(c.sendText, "תָמָר"); assert.equal(c.rule, "as-is");
+  assert.equal((await (await admin("status", null, "GET")).json()).config.niqqud, "keep");
+});

@@ -41,7 +41,7 @@ export function createTTS({ store, provider, env = {}, now = () => Date.now() })
 
   async function getConfig() {
     const c = (await store.get("config", { type: "json" })) || {};
-    return { voiceId: c.voiceId || env.TTS_VOICE_ID || null, speeds: { ...DEFAULT_SPEEDS, ...(c.speeds || {}) }, version: c.version || "1" };
+    return { voiceId: c.voiceId || env.TTS_VOICE_ID || null, speeds: { ...DEFAULT_SPEEDS, ...(c.speeds || {}) }, niqqud: c.niqqud === "keep" ? "keep" : "strip", version: c.version || "1" };
   }
   async function getIndex() {
     return (await store.get("approved-index", { type: "json" })) || { version: "0", items: {} };
@@ -139,7 +139,9 @@ export function createTTS({ store, provider, env = {}, now = () => Date.now() })
         if (!STYLES.includes(k) || !(Number(v) >= 0.5 && Number(v) <= 2)) return json(422, { error: `bad speed for ${k}` });
         speeds[k] = Number(v);
       }
-      const next = { voiceId: body?.voiceId ?? cur.voiceId, speeds, version: now().toString(36) };
+      const niqqud = body?.niqqud ?? cur.niqqud;
+      if (!["strip", "keep"].includes(niqqud)) return json(422, { error: "bad niqqud" });
+      const next = { voiceId: body?.voiceId ?? cur.voiceId, speeds, niqqud, version: now().toString(36) };
       await store.setJSON("config", next);
       return json(200, next);
     }
@@ -149,7 +151,8 @@ export function createTTS({ store, provider, env = {}, now = () => Date.now() })
     }
     if (action === "preview-text") {
       const text = cleanText(url.searchParams.get("text")); const kind = url.searchParams.get("kind");
-      return json(200, engineText(text, kind, await getOverrides()));
+      const cfg = await getConfig();
+      return json(200, engineText(text, kind, await getOverrides(), { niqqud: cfg.niqqud }));
     }
     if (action === "pronunciation" && req.method === "POST") {
       const text = cleanText(body?.text), kind = body?.kind, sendText = cleanText(body?.sendText);
@@ -165,7 +168,7 @@ export function createTTS({ store, provider, env = {}, now = () => Date.now() })
       const text = cleanText(body?.text), kind = body?.kind;
       const bad = validate(text, kind); if (bad || kind === "ui") return json(400, { error: bad || "bad-kind" });
       const cfg = await getConfig();
-      const { sendText, rule } = engineText(text, kind, await getOverrides());
+      const { sendText, rule } = engineText(text, kind, await getOverrides(), { niqqud: cfg.niqqud });
       try {
         const r = await provider.synthesize({ text: sendText, voiceId: cfg.voiceId, speed: cfg.speeds.word });
         const k = eduKey(text, kind);
