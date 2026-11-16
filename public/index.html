@@ -215,6 +215,55 @@ select{font:inherit;padding:4px;border-radius:8px}
   .small .slot .card,.small .tray .card{font-size:clamp(24px,6.8vw,34px);min-height:70px;min-width:0;padding:0 10px}
 }
 .card.locked{background:var(--slot);cursor:default}
+.badge>div{min-width:0}
+.trail{display:flex;align-items:center;gap:clamp(3px,1vw,6px);margin-top:12px;flex-wrap:nowrap;min-width:0}
+.trail i{width:clamp(8px,2.6vw,16px);height:clamp(8px,2.6vw,16px);border-radius:50%;background:var(--line);flex:none}
+.trail i.done{background:var(--green)}
+.trail .me{font-size:clamp(24px,6vw,32px);line-height:1;flex:none;filter:drop-shadow(0 3px 0 var(--press))}
+.trail .goal{width:clamp(28px,7vw,36px);height:clamp(28px,7vw,36px);border-radius:50%;display:grid;place-items:center;font-size:18px;flex:none;margin-inline-start:4px}
+.cheer{font-size:20px;margin:6px 0}
+.accs{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.accbtn{background:var(--surface);border:3px solid var(--line);border-radius:18px;padding:6px 10px;min-width:84px;cursor:pointer;display:flex;flex-direction:column;align-items:center}
+.accbtn .e{font-size:34px}.accbtn .n{font-size:14px}
+.accbtn.on{border-color:var(--purple);background:#E9E2FF;color:#23305A}
+.accbtn.lock{opacity:.5;cursor:default}
+.buddy{position:relative}
+.buddy .acc{position:absolute;font-size:28px;left:50%;transform:translateX(-50%);pointer-events:none}
+.buddy .acc.hat{top:-18px}.buddy .acc.eyes{top:10px;font-size:24px}.buddy .acc.bow{top:-10px;left:78%}
+.adultok{background:var(--surface);border:3px dashed var(--purple);border-radius:22px;padding:12px 16px;margin:14px auto;max-width:560px;text-align:center;font-size:19px}
+.adultok p{margin:0 0 10px}
+.linkbtn{background:none;border:none;color:var(--muted);text-decoration:underline;font-size:16px;margin-top:10px;cursor:pointer}
+.modal{position:fixed;inset:0;z-index:95;background:rgba(20,26,50,.55);display:grid;place-items:center;padding:16px}
+.modalbox{background:var(--surface);border-radius:28px;padding:20px 26px;text-align:center;max-width:420px;width:100%;box-shadow:0 10px 0 var(--press)}
+.modalbox h2{margin:6px 0}
+.report .rephead{display:flex;gap:14px;align-items:center}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0}
+.kpis div{background:var(--slot);border-radius:14px;padding:10px;text-align:center}
+.kpis b{display:block;font-size:22px}.kpis span{font-size:13px;color:var(--muted)}
+.repsec{margin-top:14px}.repsec h3{margin:0 0 6px;font-size:19px}.repsec ul{margin:4px 0;padding-inline-start:20px;line-height:1.6}
+.sk{display:grid;grid-template-columns:minmax(0,1.6fr) 1fr 48px;gap:10px;align-items:center;margin:6px 0;font-size:15px}
+.skbar{height:12px;background:var(--line);border-radius:7px;overflow:hidden}.skbar i{display:block;height:100%}
+.skp{text-align:left;font-variant-numeric:tabular-nums}
+.intro ul{line-height:1.7;font-size:17px;padding-inline-start:20px}
+.cert{display:flex;justify-content:center;margin-top:10px}
+.certin{border:10px double var(--purple);border-radius:24px;background:#FFFDF5;color:#23305A;padding:22px 30px;text-align:center;width:min(560px,100%)}
+.cert .ct{font-size:30px;color:#7B5CF0}.cert .cn{font-size:46px;margin:6px 0}.cert .cw{font-size:22px}.cert .cd{font-size:15px;color:#5D6A92}
+@media (min-width:700px) and (min-height:800px){
+  #stage.exmode{min-height:calc(100vh - 150px);display:flex;flex-direction:column;justify-content:center}
+  #stage.exmode .card{font-size:clamp(70px,9vw,92px);min-width:110px;min-height:140px}
+  #stage.exmode .slot{min-width:110px;min-height:140px}
+  #stage.exmode .opt .heb{font-size:68px}
+  #stage.exmode .opt.picopt{font-size:110px}
+  #stage.exmode .pic{font-size:150px}
+  #stage.exmode .prompt .txt{font-size:32px}
+  #stage.exmode .btn{font-size:28px}
+  #stage.exmode.small .card{font-size:44px;min-height:96px;min-width:0}
+}
+@media print{
+  .top,.noprint,.demo-hand,#helpBtn{display:none!important}
+  body{background:#fff!important;background-image:none!important;color:#000}
+  .panel{border:none}
+}
 .demo-hand{position:fixed;z-index:90;font-size:64px;line-height:1;pointer-events:none;opacity:0;transform:translate(-30%,-8%);transition:left .6s ease-in-out,top .6s ease-in-out,opacity .3s;filter:drop-shadow(0 4px 4px rgba(0,0,0,.3))}
 .demo-hand.press{transform:translate(-30%,-8%) scale(.82)}
 .ripple{position:fixed;z-index:89;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;border:4px solid var(--purple);pointer-events:none;animation:ripple .6s ease-out forwards}
@@ -276,8 +325,8 @@ function chunks(units){const out=[];units.forEach((u,i)=>{const v=vowelOf(u);if(
 
 /* ===================== Word bank ===================== */
 const W=(code,pic)=>({units:code.split('|').map(H),word:H(code.replace(/\|/g,'')),pic});
-const SIMPLE=[W('דa|ג','🐟'),W('גp|ג','🏠'),W('יa|ד','✋'),W('ב.p|ד','🧵'),W('סp|ל','🧺'),W('יa|ם','🏖️'),W('פ.p|ח','🗑️'),W('כ.p|ף','🥄'),W('דp|ף','📄'),W('חa|ג','🎉'),W('פ.a|ר','🐂'),W('כ.p|ד','🏺'),W('צa|ב','🐢'),W('גp|ן','🌳'),W('קp|ר','🥶'),W('חp|ם','🔥'),W('שsa|ר','🎤'),W('טp|ל','💧'),W('ב.a|א','🚶')];
-const MEDIUM=[W('אp|ב.a|א','👨'),W('סp|ב.a|א','👴'),W('עa|נa|ן','☁️'),W('חp|סaה','🥬'),W('ב.p|נa|נaה','🍌'),W('תa|מa|ר','🌴'),W('נa|חa|שs','🐍'),W('גa|מa|ל','🐫'),W('אp|גa|ס','🍐'),W('גp|נa|ן','👨‍🌾'),W('צp|ב.a|ר','🌵'),W('שsp|ב.a|ת','🕯️'),W('מp|דa|ף','📚'),W('מp|תa|נaה','🎁'),W('פ.p|נa|ס','🔦'),W('חp|לaה','🍞')];
+const SIMPLE=[W('דa|ג','🐟'),W('גp|ג','🏠'),W('יa|ד','✋'),W('סp|ל','🧺'),W('יa|ם','🏖️'),W('פ.p|ח','🗑️'),W('כ.p|ף','🥄'),W('דp|ף','📄'),W('חa|ג','🎉'),W('כ.p|ד','🏺'),W('צa|ב','🐢'),W('גp|ן','🛝'),W('קp|ר','🥶'),W('חp|ם','🥵'),W('שsa|ר','👩‍🎤')];
+const MEDIUM=[W('אp|ב.a|א','👨'),W('סp|ב.a|א','👴'),W('עa|נa|ן','☁️'),W('חp|סaה','🥬'),W('ב.p|נa|נaה','🍌'),W('תa|מa|ר','🌴'),W('נa|חa|שs','🐍'),W('גa|מa|ל','🐫'),W('אp|גa|ס','🍐'),W('צp|ב.a|ר','🌵'),W('שsp|ב.a|ת','🕯️'),W('מp|תa|נaה','🎁'),W('פ.p|נa|ס','🔦'),W('חp|לaה','🍞')];
 const HARD=[W('צe|רa|צp|ר','🦗'),W('שsp|חe|יa|ן','🏊'),W('מp|חe|ב.p|ת','🍳'),W('קp|נe|קp|ן','🫖'),W('רp|עe|שsa|ן','🪇'),W('שsp|חe|קa|ן','🎭'),W('קp|רe|נp|ף','🦏'),W('אp|רe|נa|ב','🐰'),W('ב.p|רe|וa|ז','🦆'),W('פ.p|רe|פ.p|ר','🦋'),W('חp|שse|מp|ל','⚡'),W('עp|כe|ב.a|ר','🐭'),W('דe|בp|שs','🍯'),W('סp|נe|דa|ל','🩴'),W('צp|לp|חp|ת','🍽️'),W('אp|רe|גa|ז','📦')];
 // sorting: does the word contain ד/דְ (B) or דַ/דָ (A)?
 const S=(code,pic,cat)=>({word:H(code),pic,cat});
@@ -411,6 +460,23 @@ lazyPool('purple',()=>makePool(55,POOL_SIZE,r=>{
   const o=shuffle(r,[...set]);return{type:'missing',key:'ms'+s.text+k+o.join(''),s,k,opts:o,ans:ws[k]};
 }));
 
+/* ===================== Pictures this device can draw =====================
+   Newer emoji (e.g. 🪇 🫖 🛝) show as an empty box on older tablets. A picture is "ok" when it is drawn
+   differently from a code point no font has. If even a basic emoji fails the test, the test itself is
+   unreliable here (blocked canvas), so every picture is treated as ok. */
+const PICOK=new Map();let PIC_REF=null,PIC_TEST=null;
+function picDraw(t){const c=picDraw.c||(picDraw.c=document.createElement('canvas'));c.width=c.height=24;
+  const x=c.getContext('2d',{willReadFrequently:true});x.clearRect(0,0,24,24);x.font='20px sans-serif';x.textBaseline='top';x.fillText(t,0,0);return x.getImageData(0,0,24,24).data;}
+function picRaw(e){try{if(!PIC_REF)PIC_REF=picDraw('\u{10FFFD}');const d=picDraw(e);let same=true,ink=0;
+  for(let i=0;i<d.length;i+=4){if(d[i+3])ink++;if(same&&(d[i]!==PIC_REF[i]||d[i+1]!==PIC_REF[i+1]||d[i+2]!==PIC_REF[i+2]||d[i+3]!==PIC_REF[i+3]))same=false;}
+  return ink>0&&!same;}catch(err){return true;}}
+function picOK(e){if(!e)return true;if(PIC_TEST===null)PIC_TEST=picRaw('😀');if(!PIC_TEST)return true;
+  if(!PICOK.has(e))PICOK.set(e,picRaw(e));return PICOK.get(e);}
+function picsOK(ex){const ps=[];if(ex.w&&ex.w.pic&&(ex.showPic||ex.type==='matchPic'||ex.type==='pickWord'))ps.push(ex.w.pic);
+  if(ex.s&&ex.s.pic)ps.push(ex.s.pic);if(ex.type==='matchPic')ps.push(...ex.opts);if(ex.items)ex.items.forEach(i=>ps.push(i.pic));
+  return ps.every(picOK);}
+
+const noHe=n=>n.replace(/^ה/,''); // "ל" + "הקבוצה" = "לקבוצה"
 /* ===================== Groups ===================== */
 const ORDER=['orange','blue','green','yellow','purple'];
 const GROUPS={
@@ -424,9 +490,9 @@ const AVATARS=[{e:'🦁',n:'ליאו'},{e:'🐱',n:'מיצי'},{e:'🦄',n:'קש
 const STICKERS='🌈🚀🍦🎈🦋🌻🐳🍉🎨🏆🌟🎠🦖🍭🛼🪁🎸🐙🌮🧁🦩🚂🍀🐞🎪🛸🌋🦜🏰👑'.match(/\p{Extended_Pictographic}/gu);
 
 /* ===================== Storage ===================== */
-const APP_VERSION='1.4.1';
+const APP_VERSION='1.5.0';
 // Retention: a child's data is kept for 7 days after their last use, then deleted automatically.
-const RETENTION_DAYS=7;
+const RETENTION_DAYS=60;
 const IS_PROD=document.documentElement.dataset.build==='prod';
 const STORAGE_OK=(()=>{try{localStorage.setItem('__t','1');localStorage.removeItem('__t');return true;}catch(e){return false;}})();
 const KEY='kria-bekef-v1';
@@ -600,10 +666,10 @@ const rnd=a=>a[Math.floor(Math.random()*a.length)];
 /* ===================== UI helpers ===================== */
 const stage=document.getElementById('stage');
 let NAV=0;
-function clearStage(){NAV++;if(typeof stopDemo==='function')stopDemo();CUR=null;const hb=document.getElementById('helpBtn');if(hb)hb.hidden=true;stage.innerHTML='';stage.classList.remove('small');}
+function clearStage(){NAV++;stage.classList.remove('exmode');if(typeof stopDemo==='function')stopDemo();CUR=null;const hb=document.getElementById('helpBtn');if(hb)hb.hidden=true;stage.innerHTML='';stage.classList.remove('small');}
 // like setTimeout, but dropped if the screen changed in the meantime
 function later(fn,ms){const t=NAV;window.setTimeout(()=>{if(t===NAV)fn();},ms);}
-function setBuddy(){document.getElementById('buddy').textContent=P()?P().avatar:'🦉';document.getElementById('stars').textContent='⭐ '+(P()?P().stars:0);}
+function setBuddy(){const b=document.getElementById('buddy');const p=P();const a=p&&p.acc&&ACCS.find(x=>x.e===p.acc&&p.stars>=x.s);b.innerHTML=p?`${a?`<span class="acc ${a.k}">${a.e}</span>`:''}${p.avatar}`:'🦉';document.getElementById('stars').textContent='⭐ '+(P()?P().stars:0);}
 function el(html){const t=document.createElement('template');t.innerHTML=html.trim();return t.content.firstElementChild;}
 // Drag & tap. Move/up are tracked on window, so a drag always ends cleanly even if the
 // card is re-rendered or the browser drops pointer capture mid-drag.
@@ -814,15 +880,23 @@ R.missing=(ex,ctx)=>{
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 const micOn=()=>!!SR&&(DB.mic??!IS_PROD);
 function readAloud(w,done){
-  clearStage();
+  clearStage();stage.classList.add('exmode');
   say(`עכשיו ${g('קרא','קראי')} את המילה בקול רם!`);
   stage.append(el(`<div class="pic pop">${w.pic}</div>`));
   stage.append(el(`<div class="row" style="margin:14px 0"><div class="card target${w.word.includes(' ')?' sent':''}" style="padding:0 30px;${w.word.includes(' ')?'':'font-size:clamp(56px,15vw,96px)'}">${w.word}</div></div>`));
   const row=el(`<div class="row"></div>`);stage.append(row);
   const listen=el(`<button class="btn ghostb">🔊 לשמוע</button>`);listen.onclick=()=>speakEdu(w.word);
-  const self=el(`<button class="btn green">✓ ${g('קראתי','קראתי')} בקול</button>`);
+  const self=el(`<button class="btn green">👂 ${g('קראתי','קראתי')} לאמא או לאבא</button>`);
   let finished=false;const finish=bonus=>{if(finished)return;finished=true;if(bonus){P().stars++;save();setBuddy();sfx('win');confetti();say(`${rnd(PRAISE())} קיבלת כוכב בונוס ⭐`);}later(done,bonus?1400:300);};
-  self.onclick=()=>finish(false);
+  // The adult who listened confirms. A child alone can still go on, without the bonus star.
+  self.onclick=()=>{
+    row.replaceChildren();say(`${g('קראת','קראת')} בקול? עכשיו המבוגר עונה 👂`);
+    const box=el(`<div class="adultok"><p>👂 <b>למבוגר/ת שהקשיב/ה:</b> הקריאה הייתה נכונה?</p><div class="row"><button class="btn green">👍 כן, ${g('קרא','קראה')} נכון</button><button class="btn ghostb">🔁 עוד פעם</button></div><button class="linkbtn">אין מבוגר לידי, ממשיכים</button></div>`);
+    const [yes,again,alone]=box.querySelectorAll('button');
+    yes.onclick=()=>finish(true);alone.onclick=()=>finish(false);
+    again.onclick=()=>{box.remove();if(micOn()&&row.dataset.mic)row.append(row._mic);if(voiceOn())row.append(listen);row.append(self);say(`${g('נסה','נסי')} עוד פעם, לאט לאט 🙂`,null,'encourage');};
+    stage.append(box);
+  };
   if(micOn()){
     const mic=el(`<button class="btn">🎤 ${g('אני קורא','אני קוראת')}</button>`);
     mic.onclick=()=>{
@@ -830,19 +904,19 @@ function readAloud(w,done){
         const rec=new SR();rec.lang='he-IL';rec.maxAlternatives=5;rec.interimResults=false;
         mic.disabled=true;mic.textContent='👂 מקשיב...';
         rec.onresult=e=>{const target=strip(w.word);const alts=[...e.results[0]].map(a=>strip(a.transcript).replace(/[^\u05D0-\u05EA]/g,''));if(alts.some(a=>a.includes(target)||(a.length>1&&target.includes(a)))||matchRatio(w.word,[...e.results[0]].map(a=>a.transcript)).ratio>=.7)finish(true);else{say(`שמעתי משהו אחר. ${g('נסה','נסי')} שוב, לאט לאט 🙂`,null,'encourage');}};
-        rec.onerror=()=>say(`לא הצלחתי לשמוע. ${g('לחץ','לחצי')} על "קראתי בקול" אחרי שקראת 🙂`);
+        rec.onerror=()=>say(`לא הצלחתי לשמוע. ${g('קרא','קראי')} לאמא או לאבא 🙂`);
         rec.onend=()=>{mic.disabled=false;mic.textContent=`🎤 ${g('אני קורא','אני קוראת')}`;};
         rec.start();
-      }catch(e){say(`${g('לחץ','לחצי')} על "קראתי בקול" אחרי שקראת 🙂`);}
+      }catch(e){say(`${g('קרא','קראי')} לאמא או לאבא 🙂`);}
     };
-    row.append(mic);
+    row.append(mic);row.dataset.mic='1';row._mic=mic;
   }
   if(voiceOn())row.append(listen);row.append(self);
 }
 
 /* ===================== Exercise engine ===================== */
 function runEx(ex,opts,cb){
-  clearStage();stage.classList.toggle('small',!!ex.small);
+  clearStage();stage.classList.add('exmode');stage.classList.toggle('small',!!ex.small);
   if(opts.progress)stage.append(opts.progress);
   let first=true,closed=false;
   const ctx={
@@ -929,7 +1003,68 @@ async function playDemo(ex,ctx){
     if(alive()){hand.style.opacity=0;await wait(300);}hand.remove();
   }
 }
-function checkSticker(){const p=P();const have=Math.floor(p.stars/10);if(have>(p.stickers||0)){p.stickers=have;save();later(()=>{sfx('win');say(`מדבקה חדשה לאוסף! ${STICKERS[(have-1)%STICKERS.length]}`);},1500);}}
+function checkSticker(){const p=P();checkAcc(p);const have=Math.floor(p.stars/10);if(have>(p.stickers||0)){p.stickers=have;save();later(()=>{sfx('win');say(`מדבקה חדשה לאוסף! ${STICKERS[(have-1)%STICKERS.length]}`);},1500);}}
+
+/* ===================== Progress, streaks and rewards ===================== */
+let PLAY=null; // this sitting: who plays and since when (for the break suggestion)
+// A trail from this group to the next: the child's buddy walks along it.
+function trailHTML(p){
+  const gi=ORDER.indexOf(p.group);
+  if(gi>=ORDER.length-1)return `<div style="font-size:20px;margin-top:8px">🏆 ${g('אלוף','אלופת')} הקריאה!</div>`;
+  const n=10,pos=Math.min(n-1,Math.floor(levelProgress(p)*n)),next=GROUPS[ORDER[gi+1]];
+  let h=`<div class="trail" role="img" aria-label="ההתקדמות לקבוצה הבאה">`;
+  for(let i=0;i<n;i++)h+=i===pos?`<span class="me">${p.avatar}</span>`:`<i class="${i<pos?'done':''}"></i>`;
+  return h+`<span class="goal" style="background:${next.color}">🏁</span></div><div class="muted" style="font-size:16px;margin-top:4px">בדרך ל${noHe(next.name)}</div>`;
+}
+const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
+function markDay(p){const t=today();p.days=p.days||[];if(p.days[p.days.length-1]!==t){p.days.push(t);p.days=p.days.slice(-120);}}
+function dayStreak(p){const ds=new Set(p.days||[]);let n=0;const d=new Date();
+  if(!ds.has(today()))d.setDate(d.getDate()-1);
+  for(;;){const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;if(!ds.has(k))break;n++;d.setDate(d.getDate()-1);}
+  return n;}
+// Accessories for the buddy, unlocked by stars.
+const ACCS=[{s:20,e:'🧢',n:'כובע',k:'hat'},{s:50,e:'🕶️',n:'משקפי שמש',k:'eyes'},{s:100,e:'🎀',n:'סרט',k:'bow'},{s:150,e:'🎩',n:'מגבעת',k:'hat'},{s:250,e:'👑',n:'כתר',k:'hat'}];
+function checkAcc(p){const got=ACCS.filter(a=>p.stars>=a.s).length;if(got>(p.accGot||0)){const a=ACCS[got-1];p.accGot=got;save();
+  later(()=>{sfx('win');fireworks(2);say(`פרס חדש ל${p.buddy}: ${a.e} ${a.n}! אפשר להלביש בדף הבית`,null,'praise');},2600);}}
+function accShelf(p){
+  const box=el(`<div><h2 style="font-size:24px;margin-top:20px">הפרסים של ${esc(p.buddy)}</h2><div class="accs"></div></div>`);
+  const row=box.querySelector('.accs');
+  ACCS.forEach(a=>{const open=p.stars>=a.s;
+    const b=el(`<button class="accbtn ${open?'':'lock'} ${p.acc===a.e?'on':''}" ${open?'':'disabled'} aria-label="${a.n}"><span class="e">${a.e}</span><span class="n">${open?a.n:`🔒 ${a.s} ⭐`}</span></button>`);
+    if(open)b.onclick=()=>{p.acc=p.acc===a.e?null:a.e;save();setBuddy();sfx('tap');row.querySelectorAll('.accbtn').forEach(x=>x.classList.remove('on'));if(p.acc)b.classList.add('on');};
+    row.append(b);});
+  return box;
+}
+// Skills, for the parent report: the share of first-try successes in the last 30 tries of each skill.
+const SKILLS={
+  shva:{n:'הבחנה בין שְׁוָא (דְ) לקָמָץ ופַּתָח (דָ, דַ)',tip:'הכינו שני כרטיסים, דְ ו־דָ. אמרו צליל אחד, והילד/ה מצביע/ה על הכרטיס הנכון. אחר כך מחליפים תפקידים.'},
+  kp:{n:'זיהוי קָמָץ ופַּתָח',tip:'הראו שקָמָץ ופַּתָח נשמעים אותו דבר (דָ / דַ). חפשו יחד קמץ ופתח בשלטים ובספרים בבית.'},
+  bare:{n:'אות בלי ניקוד',tip:'אות בלי ניקוד "סוגרת" את המילה, כמו ג בסוף דָג. קראו יחד מילים קצרות והדגישו את האות האחרונה.'},
+  names:{n:'שמות סימני הניקוד',tip:'משחק זיכרון: כרטיס עם סימן ניקוד וכרטיס עם השם שלו (קָמָץ, פַּתָח, שְׁוָא).'},
+  sort:{n:'שמיעת הצליל בתוך מילה (דְ או דָ)',tip:'אמרו מילה (דָג, דְבַשׁ), והילד/ה מחליט/ה אם שומעים בה דָ או דְ. אפשר עם תמונות מספר.'},
+  w2:{n:'מילים קצרות (2 צלילים, כמו דָג)',tip:'מצביעים על כל צליל, אומרים אותו, ואז מחברים: דָ... ג... דָג!'},
+  w3:{n:'מילים של 3 צלילים (כמו גָמָל)',tip:'מפרקים מילה להברות במחיאות כפיים: גָ־מָל, בַּ־נָ־נָה. אחר כך קוראים את כולה ברצף.'},
+  w4:{n:'מילים ארוכות (כמו צְרָצַר)',tip:'מכסים את המילה באצבע ומגלים הברה אחרי הברה. קוראים כל חלק, ובסוף את כל המילה.'},
+  sent:{n:'קריאת משפטים',tip:'קוראים משפט קצר יחד: הילד/ה מילה ואתם הבאה. בסוף שואלים שאלה קטנה על המשפט.'},
+};
+function skillsOf(ex){
+  const v=x=>x==='e'?'shva':x==='n'?'bare':'kp';
+  const len=()=>{const u=ex.w&&ex.w.units?ex.w.units.length:(ex.answer||[]).length;return u<=2?'w2':u===3?'w3':'w4';};
+  switch(ex.type){
+    case 'tapAll':return [v(ex.tv)];
+    case 'hearPick':return [v(ex.ans)];
+    case 'vowelName':case 'findVowel':return ['names'];
+    case 'findOdd':return [[ex.base,ex.odd].includes('e')?'shva':[ex.base,ex.odd].includes('n')?'bare':'kp'];
+    case 'sameDiff':return [[ex.a,ex.b].includes('e')&&ex.a!==ex.b?'shva':'kp'];
+    case 'sort':return ['sort'];
+    case 'missing':return ['sent'];
+    case 'build':return [ex.mode==='sentence'?'sent':len()];
+    case 'matchPic':return [ex.small?'sent':len()];
+    case 'pickWord':return [len()];
+  }
+  return [];
+}
+function recordSkills(p,ex,ok){p.skills=p.skills||{};for(const k of skillsOf(ex))p.skills[k]=[...(p.skills[k]||[]),ok?1:0].slice(-30);}
 
 /* ===================== Screens ===================== */
 let draft={};
@@ -946,6 +1081,7 @@ function enterProfile(p){
   later(()=>{if(P()&&P().id===p.id&&stage.querySelector('h2'))screenHome();},1600);
 }
 function screenProfiles(){screenName();}
+function firstScreen(){if(!DB.introSeen&&!Object.keys(DB.profiles).length)return screenIntro(false);screenName();}
 function screenName(){
   draft={};DB.current=null;save();setBuddy();clearStage();stage.classList.remove('small');
   say('שלום! אני ינשופי. איך קוראים לך?');
@@ -1001,6 +1137,7 @@ function screenPlacementIntro(){
   const b=el(`<div class="row"><button class="btn big">${g('התחל','התחילי')} ▶</button></div>`);b.querySelector('button').onclick=runPlacement;stage.append(b);
 }
 const PLACE_OK={orange:e=>['tapAll','vowelName','hearPick'].includes(e.type),blue:e=>['sort','build','matchPic'].includes(e.type),green:e=>['build','pickWord'].includes(e.type),yellow:e=>e.type==='build'};
+for(const k in PLACE_OK){const f0=PLACE_OK[k];PLACE_OK[k]=e=>f0(e)&&picsOK(e);}
 function dots(n,i){const d=el(`<div class="progress"></div>`);for(let k=0;k<n;k++)d.append(el(`<i class="${k<i?'done':k===i?'now':''}"></i>`));return d;}
 function runPlacement(){
   // adaptive: start at blue, 2 questions per level (3 if split), move up/down; at most 10 questions
@@ -1031,7 +1168,7 @@ function runPlacement(){
 }
 function screenPlaced(grp){
   const G=GROUPS[grp];clearStage();sfx('win');confetti();
-  say(`${g('סיימת','סיימת')}! ${g('אתה','את')} ב${G.name}: ${G.kid}`);
+  say(`${g('סיימת','סיימת')}! ${g('אתה','את')} ב${noHe(G.name)}: ${G.kid}`);
   stage.append(el(`<h2>${g('איזה כיף, סיימת!','איזה כיף, סיימת!')}</h2>`));
   stage.append(el(`<div class="badge"><div class="bigdot" style="background:${G.color}"></div><div><div style="font-size:28px">${G.name}</div><div class="muted" style="font-size:20px">${G.kid}</div></div></div>`));
   const b=el(`<div class="row" style="margin-top:20px"><button class="btn big">${g('בוא','בואי')} נתחיל ▶</button></div>`);b.querySelector('button').onclick=()=>startSession(20);stage.append(b);
@@ -1052,13 +1189,16 @@ function screenHome(){
   say(`היי ${p.name}! ${g('מוכן','מוכנה')} לקרוא? ${p.avatar}`);
   stage.append(el(`<h2>${esc(p.name)} ו${p.buddy}</h2>`));
   const gi=ORDER.indexOf(p.group);const prog=levelProgress(p);
-  const pool=POOLS[p.group];const mastered=masteredCount(p);const streak=streakOf(p);
-  stage.append(el(`<div class="badge"><div class="bigdot" style="background:${G.color}"></div><div style="flex:1"><div style="font-size:26px">${G.name}</div><div class="muted" style="font-size:18px">${G.kid}</div>${gi<ORDER.length-1?`<div class="bar" aria-label="התקדמות לקבוצה הבאה"><div style="width:${Math.round(prog*100)}%"></div></div><div class="muted" style="font-size:16px;margin-top:4px">בדרך ל${GROUPS[ORDER[gi+1]].name}</div>`:`<div style="font-size:18px;margin-top:6px">🏆 ${g('אלוף','אלופת')} הקריאה!</div>`}</div></div>`));
+  const streak=streakOf(p),days=dayStreak(p);
+  if(!PLAY||PLAY.pid!==p.id)PLAY={pid:p.id,t0:Date.now(),asked:0};
+  stage.append(el(`<div class="badge"><div class="bigdot" style="background:${G.color}"></div><div style="flex:1"><div style="font-size:26px">${G.name}</div><div class="muted" style="font-size:18px">${G.kid}</div>${trailHTML(p)}</div></div>`));
   const b=el(`<div class="row" style="margin:24px 0 8px"><button class="btn big green">▶ ${g('בוא','בואי')} נתרגל</button><button class="btn big" style="background:var(--blue)">📖 לומדים לקרוא</button></div>`);const [pb,rb]=b.querySelectorAll('button');pb.onclick=()=>startSession(15);rb.onclick=screenPath;stage.append(b);
-  stage.append(el(`<p class="center muted" style="font-size:16px">${streak?`🔥 ${streak} הצלחות ברצף · `:''}${mastered} תרגילים שכבר ${g('שלטת','שלטת')} בהם (מתוך ${pool.length})</p>`));
+  const cheers=[days>=2?`📅 ${days} ימים ברצף!`:'',streak>=3?`🔥 ${streak} נכונים ברצף!`:''].filter(Boolean);
+  if(cheers.length)stage.append(el(`<p class="center cheer">${cheers.join(' &nbsp; ')}</p>`));
   const have=p.stickers||0;const st=el(`<div><h2 style="font-size:24px;margin-top:20px">האוסף שלי</h2><div class="stickers"></div><p class="center muted" style="font-size:16px">כל 10 כוכבים = מדבקה חדשה</p></div>`);
   const sb=st.querySelector('.stickers');for(let k=0;k<Math.max(10,have+3)&&k<STICKERS.length;k++)sb.append(el(`<span class="${k<have?'':'lock'}">${STICKERS[k]}</span>`));
   stage.append(st);
+  stage.append(accShelf(p));
   const sw=el(`<div class="row" style="margin-top:22px"><button class="btn ghostb small">🔄 החלפת ילד/ה</button></div>`);sw.querySelector('button').onclick=screenProfiles;stage.append(sw);
 }
 let sess=null;
@@ -1066,15 +1206,34 @@ function startSession(len=15){sess={n:0,len,good:0};nextEx();}
 function nextEx(){
   const p=P();const grp=p.group;const pool=POOLS[grp];
   p.mastery=p.mastery||{};const m=p.mastery[grp]=p.mastery[grp]||{};
-  let i=p.idx[grp]||0;for(let k=0;k<pool.length&&(m[pool[i%pool.length].id]||0)>=MASTER_AT;k++)i++;
+  let i=p.idx[grp]||0;for(let k=0;k<pool.length&&((m[pool[i%pool.length].id]||0)>=MASTER_AT||!picsOK(pool[i%pool.length]));k++)i++;
   p.idx[grp]=i;const ex=pool[i%pool.length];
   runEx(ex,{read:true,progress:dots(sess.len,sess.n)},ok=>{
     if(ok)m[ex.id]=(m[ex.id]||0)+1;
+    markDay(p);recordSkills(p,ex,ok);
     p.idx[grp]++;p.done[grp]=(p.done[grp]||0)+1;p.hist[grp]=[...(p.hist[grp]||[]),ok].slice(-30);p.total=(p.total||0)+1;if(ok)sess.good++;save();
     sess.n++;
     if(checkLevelUp())return;
-    if(sess.n>=sess.len)endSession();else nextEx();
+    if(sess.n>=sess.len)endSession();else if(!breakDue())nextEx();
   });
+}
+// 10. Suggest a short break after a while (adult setting; off = 0).
+function breakDue(){
+  const min=DB.breakMin??15;if(!min||!PLAY)return false;
+  if(Date.now()-PLAY.t0<min*60000)return false;
+  screenBreak();return true;
+}
+function screenBreak(){
+  const p=P();clearStage();sfx('win');
+  say(`וואו ${p.name}, ${g('עבדת','עבדת')} יפה! זמן להפסקה קטנה: לשתות מים ולקפוץ עשר קפיצות 🤸`,null,'praise');
+  stage.append(el(`<div class="pic pop" style="margin-top:16px">🧃</div>`));
+  stage.append(el(`<h2>זמן להפסקה!</h2>`));
+  stage.append(el(`<p class="center muted" style="font-size:20px">לשתות מים, למתוח את הגוף, לקפוץ קצת 🤸</p>`));
+  const r=el(`<div class="row" style="margin-top:18px"><button class="btn big green">👋 ${g('סיימתי','סיימתי')} להיום</button><button class="btn ghostb">▶ עוד קצת</button></div>`);
+  const [stop,more]=r.querySelectorAll('button');
+  stop.onclick=()=>{PLAY=null;screenName();};
+  more.onclick=()=>{PLAY.t0=Date.now()-Math.max(0,(DB.breakMin??15)-10)*60000;nextEx();};
+  stage.append(r);
 }
 function checkLevelUp(){
   const p=P();if(!readyToMoveUp(p))return false;
@@ -1083,10 +1242,10 @@ function checkLevelUp(){
 function screenOfferMoveUp(){
   const p=P();const next=ORDER[ORDER.indexOf(p.group)+1];const G=GROUPS[next];
   clearStage();sfx('win');confetti();
-  say(`וואו! ${LVL_STREAK} תרגילים ברצף בלי אף טעות! ${g('רוצה','רוצה')} לעבור ל${G.name}?`,null,'praise');
+  say(`וואו! ${LVL_STREAK} תרגילים ברצף בלי אף טעות! ${g('רוצה','רוצה')} לעבור ל${noHe(G.name)}?`,null,'praise');
   stage.append(el(`<div class="pic pop" style="margin-top:16px">🌟</div>`));
   stage.append(el(`<h2>${LVL_STREAK} תרגילים ברצף בלי טעות!</h2>`));
-  stage.append(el(`<div class="badge"><div class="bigdot" style="background:${G.color}"></div><div><div style="font-size:24px">${g('מוכן','מוכנה')} ל${G.name}?</div><div class="muted" style="font-size:18px">${G.kid}</div></div></div>`));
+  stage.append(el(`<div class="badge"><div class="bigdot" style="background:${G.color}"></div><div><div style="font-size:24px">${g('מוכן','מוכנה')} ל${noHe(G.name)}?</div><div class="muted" style="font-size:18px">${G.kid}</div></div></div>`));
   const r=el(`<div class="row" style="margin-top:18px"><button class="btn big green">${g('כן, אני עובר!','כן, אני עוברת!')} 🚀</button><button class="btn ghostb">עוד קצת כאן</button></div>`);
   const [yes,no]=r.querySelectorAll('button');
   yes.onclick=()=>{const from=p.group;p.group=next;p.hist[p.group]=[];p.movedUp=(p.movedUp||[]).concat({from,to:next,at:Date.now()});save();screenLevelUp(from,next);};
@@ -1095,11 +1254,12 @@ function screenOfferMoveUp(){
 }
 function screenLevelUp(from,to){
   const G=GROUPS[to];clearStage();sfx('win');confetti();later(confetti,700);
-  say(`וואו ${P().name}! ${g('התקדמת','התקדמת')} ל${G.name}! ${G.kid}`,null,'intro');
+  say(`וואו ${P().name}! ${g('התקדמת','התקדמת')} ל${noHe(G.name)}! ${G.kid}`,null,'intro');
   stage.append(el(`<div class="pic pop" style="margin-top:16px">🚀</div>`));
   stage.append(el(`<h1>${g('עלית שלב!','עלית שלב!')}</h1>`));
   stage.append(el(`<div class="badge"><div class="bigdot" style="background:${G.color}"></div><div><div style="font-size:28px">${G.name}</div><div class="muted" style="font-size:20px">${G.kid}</div></div></div>`));
-  const b=el(`<div class="row" style="margin-top:18px"><button class="btn big">${g('קדימה','קדימה')} ▶</button></div>`);b.querySelector('button').onclick=screenHome;stage.append(b);
+  const b=el(`<div class="row" style="margin-top:18px"><button class="btn big">${g('קדימה','קדימה')} ▶</button><button class="btn ghostb">🏅 תעודה</button></div>`);
+  const [go,ce]=b.querySelectorAll('button');go.onclick=screenHome;ce.onclick=()=>screenCertificate(P(),`${g('עלה','עלתה')} ל${noHe(G.name)}`,screenHome);stage.append(b);
 }
 function endSession(){
   clearStage();sfx('win');confetti();
@@ -1168,14 +1328,15 @@ function completeStation(pid,si){
   const r=el(`<div class="row" style="margin-top:18px"></div>`);
   if(si+1<st.length){const nx=el(`<button class="btn big green">▶ לתחנה הבאה</button>`);nx.onclick=()=>st[si+1].book?runBook(pid,si+1):runStation(pid,si+1);r.append(nx);}
   const mp=el(`<button class="btn ghostb">🗺️ למסלול</button>`);mp.onclick=screenPath;r.append(mp);
+  if(isBook){const ce=el(`<button class="btn ghostb">🏅 תעודה</button>`);ce.onclick=()=>screenCertificate(p,`${g('קרא','קראה')} את הספר "${strip(st[si].book.title)}"`,screenPath);r.append(ce);}
   stage.append(r);
 }
 function renderReading(item,o,done){
-  clearStage();stage.classList.remove('small');
+  clearStage();stage.classList.remove('small');stage.classList.add('exmode');
   if(o.total)stage.append(dots(o.total,o.idx));
   const what={words:'את המילה',phrases:'את המילים',short:'את המשפט',long:'את המשפט',page:'את העמוד'}[o.kind];
   say(`${g('קרא','קראי')} ${what}. ${o.idx===0&&voiceOn()?'אפשר ללחוץ על מילה כדי לשמוע אותה 👆':''}`);
-  if(o.kind==='page')stage.append(el(`<div class="pic">${item.pic}</div>`));
+  if(o.kind==='page'&&picOK(item.pic))stage.append(el(`<div class="pic">${item.pic}</div>`));
   const box=el(`<div class="readbox ${o.kind}"></div>`);const spans=[];
   const parts=wordSpans(item.text);
   parts.forEach((x,k)=>{const s=el(`<span class="rw" role="button" tabindex="0"></span>`);s.dataset.w=x.w;s.dataset.p=x.p;s.innerHTML=x.w+x.p;
@@ -1190,11 +1351,11 @@ function renderReading(item,o,done){
   const row=el(`<div class="row" style="margin-top:14px"></div>`);
   let finished=false;
   const next=bonus=>{
-    if(finished)return;finished=true;P().stars+=1+(bonus?1:0);save();setBuddy();checkSticker();sfx(bonus?'win':'yes');if(bonus)confetti();
+    if(finished)return;finished=true;P().stars+=1+(bonus?1:0);markDay(P());save();setBuddy();checkSticker();sfx(bonus?'win':'yes');if(bonus)confetti();
     say(rnd(PRAISE())+(bonus?' קיבלת כוכב בונוס ⭐':''),null,'praise');
     tools.remove();row.remove();
     const pic=picFor(item.text);
-    if(o.comprehension&&item.pic)later(()=>comprehend(item,o.pool,done),1000);
+    if(o.comprehension&&item.pic&&picOK(item.pic))later(()=>comprehend(item,o.pool,done),1000);
     else if(o.kind==='words'&&pic){box.insertAdjacentElement('beforebegin',el(`<div class="pic pop">${pic}</div>`));later(done,1600);}
     else later(done,o.kind==='page'?400:1000);
   };
@@ -1211,7 +1372,7 @@ function renderReading(item,o,done){
   stage.append(tools,row);
 }
 function comprehend(item,pool,done){
-  const others=picDistractors(Math.random,item.text,item.pic,[...pool,...SENTS].map(x=>x.pic));
+  const others=picDistractors(Math.random,item.text,item.pic,[...pool,...SENTS].map(x=>x.pic).filter(picOK));
   const opts=shuffle(Math.random,[item.pic,...others]);
   say('איזו תמונה מתאימה למשפט?');
   const o=el(`<div class="opts"></div>`);let ok=false;
@@ -1219,20 +1380,23 @@ function comprehend(item,pool,done){
   stage.append(o);
 }
 function runBook(pid,si){
-  const b=stationsOf(pid)[si].book;let pg=0;
-  const page=()=>{if(pg>=b.pages.length)return question(0);renderReading(b.pages[pg],{kind:'page',idx:pg,total:b.pages.length},()=>{pg++;page();});};
-  const question=qi=>{
+  const b=stationsOf(pid)[si].book;let pg=0,mid=false;const MID=4; // first question after page 4, the rest at the end
+  const page=()=>{
+    if(!mid&&pg===MID&&b.qs.length>1&&b.pages.length>MID){mid=true;return question(0,true);}
+    if(pg>=b.pages.length)return question(mid?1:0);
+    renderReading(b.pages[pg],{kind:'page',idx:pg,total:b.pages.length},()=>{pg++;page();});};
+  const question=(qi,midway)=>{
     if(qi>=b.qs.length)return completeStation(pid,si);
     const q=b.qs[qi];clearStage();
     stage.append(header(q.q,null,()=>speakUI(q.q)));
     const o=el(`<div class="opts"></div>`);let ok=false;
     shuffle(Math.random,q.opts.map((t,i)=>({t,i}))).forEach(x=>{const btn=el(`<button class="opt"><span class="heb" style="font-size:clamp(30px,8vw,46px)">${x.t}</span></button>`);
-      btn.onclick=()=>{if(ok)return;speakEdu(x.t);if(x.i===q.a){ok=true;btn.classList.add('card','ok');sfx('yes');later(()=>question(qi+1),1200);}else{sfx('no');btn.classList.add('shake');later(()=>btn.classList.remove('shake'),500);say(`נסו להיזכר בסיפור 🙂`,null,'encourage');}};o.append(btn);});
+      btn.onclick=()=>{if(ok)return;speakEdu(x.t);if(x.i===q.a){ok=true;btn.classList.add('card','ok');sfx('yes');later(()=>midway?page():question(qi+1),1200);}else{sfx('no');btn.classList.add('shake');later(()=>btn.classList.remove('shake'),500);say(`נסו להיזכר בסיפור 🙂`,null,'encourage');}};o.append(btn);});
     stage.append(o);
   };
   clearStage();stage.classList.remove('small');
   say(`ספר: ${strip(b.title)}. ${g('בוא','בואי')} נקרא ביחד!`,null,'intro');
-  stage.append(el(`<div class="bookcover"><div class="pic">${b.cover}</div><h1 class="heb" style="line-height:1.6">${b.title}</h1><p class="muted" style="font-size:18px">${b.pages.length} עמודים ושתי שאלות בסוף</p></div>`));
+  stage.append(el(`<div class="bookcover"><div class="pic">${b.cover}</div><h1 class="heb" style="line-height:1.6">${b.title}</h1><p class="muted" style="font-size:18px">${b.pages.length} עמודים, ושאלה באמצע ובסוף</p></div>`));
   const go=el(`<div class="row"><button class="btn big green">📖 פותחים את הספר</button></div>`);go.querySelector('button').onclick=page;stage.append(go);
 }
 
@@ -1264,13 +1428,14 @@ function buildSpeechCatalog(){
 
 /* ===================== Adult panel ===================== */
 function screenGate(){
-  clearStage();const a=6+Math.floor(Math.random()*4),b=6+Math.floor(Math.random()*4);
+  clearStage();const T=['עשרים','שלושים','ארבעים','חמישים','שישים','שבעים','שמונים','תשעים'],U=['','אחת','שתיים','שלוש','ארבע','חמש','שש','שבע','שמונה','תשע'];
+  const ti=Math.floor(Math.random()*8),ui=1+Math.floor(Math.random()*9),num=(ti+2)*10+ui;
   document.getElementById('bubble').textContent='אזור למורים ולהורים';
   stage.append(el(`<h2>אזור למבוגרים</h2>`));
-  stage.append(el(`<p class="center" style="font-size:24px">כמה זה ${a} + ${b}?</p>`));
+  stage.append(el(`<p class="center" style="font-size:22px">כתבו בספרות את המספר:<br><b style="font-size:30px">${T[ti]} ו${U[ui]}</b></p>`));
   const inp=el(`<input class="input" inputmode="numeric" aria-label="תשובה">`);const r=el(`<div class="row"></div>`);r.append(inp);stage.append(r);
   const go=el(`<div class="row" style="margin-top:16px"><button class="btn">כניסה</button><button class="btn ghostb">חזרה</button></div>`);
-  const [ok,back]=go.querySelectorAll('button');ok.onclick=()=>{if(+inp.value===a+b)screenTeacher();else{inp.classList.add('shake');later(()=>inp.classList.remove('shake'),500);}};back.onclick=()=>P()?screenHome():screenProfiles();
+  const [ok,back]=go.querySelectorAll('button');ok.onclick=()=>{if(+inp.value===num)screenTeacher();else{inp.classList.add('shake');later(()=>inp.classList.remove('shake'),500);}};back.onclick=()=>P()?screenHome():screenProfiles();
   inp.onkeydown=e=>{if(e.key==='Enter')ok.click();};stage.append(go);
 }
 function screenTeacher(){
@@ -1289,8 +1454,8 @@ function screenTeacher(){
       const tr=el(`<tr><td>${p.avatar} ${esc(p.name)}</td><td></td><td>${p.done[p.group]||0}</td><td>${masteredCount(p)}</td><td>${pct}${flag}${readyToMoveUp(p)?' ⭐ מוכן/ה לעלות':''}</td><td>${readInfo(p)}</td><td>${Math.max(1,Math.ceil(((p.lastUsed||p.created||Date.now())+RETENTION_DAYS*864e5-Date.now())/864e5))} ימים</td><td>${p.stars}</td><td></td></tr>`);
       const sel=el(`<select aria-label="קבוצה"><option value="">טרם שובץ</option>${ORDER.map(o=>`<option value="${o}" ${p.group===o?'selected':''}>${GROUPS[o].name}</option>`).join('')}</select>`);
       sel.onchange=()=>{p.group=sel.value||null;if(p.group)p.hist[p.group]=[];save();screenTeacher();};tr.children[1].append(sel);
-      const acts=el(`<span><button class="btn ghostb small">מבחן היכרות מחדש</button> <button class="btn ghostb small">מחיקה</button></span>`);
-      const [re,del]=acts.querySelectorAll('button');re.onclick=()=>{p.group=null;save();screenTeacher();};del.onclick=()=>{if(confirm(`למחוק את ${p.name}?`)){delete DB.profiles[p.id];if(DB.current===p.id)DB.current=null;save();screenTeacher();}};
+      const acts=el(`<span><button class="btn small">📋 דוח</button> <button class="btn ghostb small">מבחן היכרות מחדש</button> <button class="btn ghostb small">מחיקה</button></span>`);
+      const [rp,re,del]=acts.querySelectorAll('button');rp.onclick=()=>screenReport(p.id);re.onclick=()=>{p.group=null;save();screenTeacher();};del.onclick=()=>{if(confirm(`למחוק את ${p.name}?`)){delete DB.profiles[p.id];if(DB.current===p.id)DB.current=null;save();screenTeacher();}};
       tr.children[8].append(acts);tb.append(tr);
     });
     panel.append(tw);
@@ -1298,9 +1463,9 @@ function screenTeacher(){
   const lg=el(`<div class="legend" style="margin-top:16px"><h2 style="font-size:22px;text-align:right">מה כל קבוצה מתרגלת</h2></div>`);
   ORDER.forEach(o=>lg.append(el(`<p><span class="dot" style="background:${GROUPS[o].color};margin:0 0 0 6px"></span><b>${GROUPS[o].name}</b> (${POOLS[o].length} תרגילים): ${GROUPS[o].adult}</p>`)));
   lg.append(el(`<p><b>שיבוץ ומעבר קבוצה:</b> משחק ההיכרות מתאים את עצמו לילד/ה (עד 10 שאלות, מתחיל ברמה הכחולה ועולה או יורד). אחרי השיבוץ הילד/ה מתרגל/ת ברמה שלו/ה: סבב ראשון של 20 תרגילים, ואחריו סבבים של 15. בכל קבוצה יש 3,200 תרגילים שונים. תרגיל שילד/ה פתר/ה נכון בניסיון הראשון פעמיים נחשב "נשלט" ולא מוצג לו/ה שוב. מעבר לקבוצה הבאה <b>מוצע</b> רק אחרי 40 תרגילים לפחות בקבוצה, כש־20 התרגילים האחרונים נפתרו כולם בלי טעות. הילד/ה יכול/ה לבחור "עוד קצת כאן", וההצעה תחזור אחרי 10 תרגילים נוספים בלי טעות. אפשר לשנות קבוצה ידנית בטבלה.</p>`));
-  lg.append(el(`<p><b>קריאה בקול:</b> אחרי בניית מילה הילד/ה מתבקש/ת לקרוא אותה. בדפדפן שתומך בזיהוי דיבור (בעיקר Chrome) אפשר לקרוא למיקרופון ולקבל כוכב בונוס; אחרת יש כפתור "קראתי בקול".</p>`));
+  lg.append(el(`<p><b>קריאה בקול:</b> אחרי בניית מילה הילד/ה מתבקש/ת לקרוא אותה לאמא או לאבא. המבוגר/ת שהקשיב/ה מאשר/ת, והילד/ה מקבל/ת כוכב בונוס. אם אין מבוגר ליד, אפשר להמשיך בלי הכוכב. בדפדפן שתומך בזיהוי דיבור אפשר גם לקרוא למיקרופון.</p>`));
   lg.append(el(`<p><b>לומדים לקרוא (מסלול נפרד):</b> מסלול שמותאם לקבוצה של הילד/ה: קריאת מילים, צירופים של שתי מילים, משפטים קצרים, משפטים ארוכים, ובסוף ספר קצר עם שאלות הבנה. כל תחנה נפתחת אחרי שמסיימים את הקודמת. אפשר לחלק מילים להברות בצבעים, וכשהקול המדבר פעיל גם ללחוץ על מילה ולשמוע אותה ולשמוע הקראה עם הדגשה של כל מילה. אחרי משפט יש שאלת הבנה (התאמה לתמונה). הכתומה והכחולה קוראות במסלול א׳, הירוקה בב׳, הצהובה בג׳ והסגולה בד׳ (שני ספרים).</p>`));
-  lg.append(el(`<p><b>שמירה:</b> הנתונים נשמרים במכשיר הזה בלבד, ונמחקים אוטומטית 7 ימים אחרי השימוש האחרון של כל ילד/ה.</p>`));
+  lg.append(el(`<p><b>שמירה:</b> הנתונים נשמרים במכשיר הזה בלבד, ונמחקים אוטומטית 60 יום אחרי השימוש האחרון של כל ילד/ה.</p>`));
   panel.append(lg);
   const set=el(`<div style="margin-top:16px"><h2 style="font-size:22px;text-align:right">הגדרות ונתונים</h2></div>`);
   if(!STORAGE_OK)set.append(el(`<p style="color:var(--red)">⚠️ הדפדפן הזה חוסם שמירה (למשל גלישה בסתר). ההתקדמות תימחק כשסוגרים את הדף.</p>`));
@@ -1331,8 +1496,85 @@ function screenTeacher(){
   if(IS_PROD)set.append(bk,el(`<p style="font-size:14px" class="muted">הגיבוי שימושי לפני החלפת טאבלט או ניקוי הדפדפן. אפשר לשחזר אותו במכשיר אחר.</p>`));
   set.append(el(`<p style="font-size:14px" class="muted">גרסה ${APP_VERSION}${IS_PROD?' · <a href="privacy.html" target="_blank" rel="noopener">מדיניות פרטיות</a>':''}${Speech.mode==='server'?' · <a href="review.html" target="_blank" rel="noopener">בדיקת הקלטות והגייה</a>':''}</p>`));
   panel.append(set);
-  const back=el(`<div class="row" style="margin-top:14px"><button class="btn">חזרה</button></div>`);back.querySelector('button').onclick=()=>P()&&P().group?screenHome():screenProfiles();
+  const brk=el(`<label style="display:block;font-size:16px;margin:10px 0">הצעת הפסקה לילד/ה אחרי: <select><option value="10">10 דקות</option><option value="15">15 דקות</option><option value="20">20 דקות</option><option value="30">30 דקות</option><option value="0">בלי</option></select></label>`);
+  const bs=brk.querySelector('select');bs.value=String(DB.breakMin??15);bs.onchange=()=>{DB.breakMin=+bs.value;save();};
+  set.append(brk);
+  const back=el(`<div class="row" style="margin-top:14px"><button class="btn">חזרה</button><button class="btn ghostb">ℹ️ מידע להורים</button></div>`);
+  const [backBtn,infoBtn]=back.querySelectorAll('button');backBtn.onclick=()=>P()&&P().group?screenHome():screenProfiles();infoBtn.onclick=()=>screenIntro(true);
   panel.append(back);stage.append(panel);
+}
+
+// 11. A report a parent can read: what the child practises, what is hard, what to do at home.
+const WORKBOOK={
+  orange:'דף עבודה לזיהוי חזותי של הצלילים דְ ו־דָ, חוברת עמוד 36 משימות 1–3 ועמוד 37 משימה 4.',
+  blue:'דף גזירה והדבקה (בחירת הצליל המתאים לתמונה), חוברת עמוד 36 ועמוד 37 משימה 4.',
+  green:'חוברת עמודים 36–38, ודף העבודה "סיימתי" (חיבור צלילים שנלמדו למילים).',
+  yellow:'משימת "המילים התבלבלו" (סידור צלילים בקמץ ובפתח ליצירת מילים), חוברת עמודים 37–38.',
+  purple:'קריאת משפטים וספרונים קצרים בבית, 10 דקות ביום.'
+};
+function screenReport(pid){
+  const p=DB.profiles[pid];if(!p)return screenTeacher();clearStage();
+  document.getElementById('bubble').textContent=`דוח התקדמות: ${p.name}`;
+  const G=GROUPS[p.group]||null;const sk=p.skills||{};
+  const rows=Object.entries(SKILLS).map(([k,v])=>{const a=sk[k]||[];return {k,n:v.n,tip:v.tip,tries:a.length,rate:a.length?a.reduce((x,y)=>x+y,0)/a.length:null};});
+  const enough=rows.filter(r=>r.tries>=5);
+  const weak=enough.filter(r=>r.rate<0.7).sort((a,b)=>a.rate-b.rate).slice(0,3);
+  const strong=enough.filter(r=>r.rate>=0.9).sort((a,b)=>b.rate-a.rate).slice(0,3);
+  const last14=new Set();{const d=new Date();for(let i=0;i<14;i++){last14.add(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);d.setDate(d.getDate()-1);}}
+  const active=(p.days||[]).filter(d=>last14.has(d)).length;
+  const books=Object.values(p.read||{}).reduce((n,rs)=>n+(rs.doneSt||[]).length,0);
+  const pct=r=>`${Math.round(r*100)}%`;
+  const panel=el(`<div class="panel report"></div>`);
+  panel.append(el(`<div class="rephead"><div style="font-size:54px">${p.avatar}</div><div><h2 style="margin:0;text-align:right">${esc(p.name)}</h2><div class="muted">דוח התקדמות · ${new Date().toLocaleDateString('he-IL')}</div></div></div>`));
+  panel.append(el(`<div class="kpis">
+    <div><b>${G?G.name:'טרם שובץ'}</b><span>קבוצה</span></div>
+    <div><b>${active} מתוך 14</b><span>ימי תרגול בשבועיים האחרונים</span></div>
+    <div><b>${dayStreak(p)}</b><span>ימים ברצף</span></div>
+    <div><b>${p.total||0}</b><span>תרגילים בסך הכול</span></div>
+    <div><b>${books}</b><span>תחנות קריאה שהושלמו</span></div>
+    <div><b>${p.stars}</b><span>כוכבים</span></div></div>`));
+  if(G)panel.append(el(`<div class="repsec"><h3>מה ${p.gender==='f'?'היא':'הוא'} מתרגל${p.gender==='f'?'ת':''} עכשיו</h3><p>${G.adult}</p>${p.group!==ORDER[ORDER.length-1]?`<p class="muted">מעבר לקבוצה הבאה מוצע אחרי 20 תרגילים ברצף בלי טעות. ההתקדמות עכשיו: ${Math.round(levelProgress(p)*100)}%.</p>`:''}</div>`));
+  if(!enough.length)panel.append(el(`<div class="repsec"><h3>חוזקות וקשיים</h3><p class="muted">עוד אין מספיק נתונים. הם מצטברים מכל תרגול (לפחות 5 תרגילים מכל סוג), כך שאחרי כמה ימי תרגול יופיע כאן פירוט.</p></div>`));
+  else{
+    const sec=el(`<div class="repsec"><h3>חוזקות וקשיים</h3><p class="muted" style="margin-top:0">אחוז ההצלחה בניסיון הראשון, ב־30 התרגילים האחרונים מכל סוג.</p><div class="skillbars"></div></div>`);
+    const sb=sec.querySelector('.skillbars');
+    enough.forEach(r=>sb.append(el(`<div class="sk"><span class="skn">${r.n}</span><span class="skbar"><i style="width:${Math.round(r.rate*100)}%;background:${r.rate<0.7?'var(--orange)':r.rate>=0.9?'var(--green)':'var(--blue)'}"></i></span><span class="skp">${pct(r.rate)}</span></div>`)));
+    panel.append(sec);
+    if(strong.length)panel.append(el(`<div class="repsec"><h3>💪 הולך טוב</h3><ul>${strong.map(r=>`<li>${r.n} (${pct(r.rate)})</li>`).join('')}</ul></div>`));
+    if(weak.length)panel.append(el(`<div class="repsec"><h3>🌱 כדאי לתרגל</h3><ul>${weak.map(r=>`<li><b>${r.n}</b> (${pct(r.rate)})<br>${r.tip}</li>`).join('')}</ul></div>`));
+  }
+  if(p.group)panel.append(el(`<div class="repsec"><h3>📒 בחוברת ובדפי העבודה</h3><p>${WORKBOOK[p.group]}</p></div>`));
+  panel.append(el(`<div class="repsec"><h3>💡 טיפ כללי</h3><p>10–15 דקות ביום עדיפות על פעם ארוכה בשבוע. כדאי לשבת ליד הילד/ה מדי פעם, ולבקש ממנו/ה לקרוא לכם את המילה בסוף תרגיל.</p></div>`));
+  const r=el(`<div class="row noprint" style="margin-top:14px"><button class="btn">🖨️ הדפסה</button><button class="btn ghostb">🏅 תעודה</button><button class="btn ghostb">חזרה</button></div>`);
+  const [pr,cert,bk]=r.querySelectorAll('button');pr.onclick=()=>{try{window.print();}catch(e){}};
+  cert.onclick=()=>screenCertificate(p,G?`מתרגל${p.gender==='f'?'ת':''} קריאה ב${noHe(G.name)}`:'מתחיל/ה לקרוא',()=>screenReport(pid));bk.onclick=screenTeacher;
+  panel.append(r);stage.append(panel);
+}
+
+// 13. A short explanation for parents on the first visit (and from the adult area).
+function screenIntro(fromAdult){
+  clearStage();document.getElementById('bubble').textContent='שלום להורים ולמורים 👋';
+  const panel=el(`<div class="panel intro"><h2 style="margin-top:0">שלום להורים ולמורים 👋</h2><ul>
+    <li><b>מה זה:</b> תרגול קריאה בניקוד לכיתה א׳, לפי הקבוצות בכיתה (כתומה, כחולה, ירוקה, צהובה), ושלב מתקדם (סגולה).</li>
+    <li><b>איך מתחילים:</b> משחק היכרות קצר קובע את הרמה. הילד/ה מתרגל/ת ברמה שלו/ה, ועובר/ת קבוצה רק כשההצלחה קבועה.</li>
+    <li><b>כמה זמן:</b> מומלץ 10–15 דקות ביום. האפליקציה תציע הפסקה.</li>
+    <li><b>בפעם הראשונה:</b> כדאי לשבת ליד הילד/ה. יד קטנה מדגימה כל סוג תרגיל, וכפתור ❓ למעלה מדגים שוב.</li>
+    <li><b>אזור המבוגרים (⚙️ למעלה):</b> דוח התקדמות לכל ילד/ה, תעודה, הגדרות קול והפסקות, ושינוי קבוצה.</li>
+    <li><b>פרטיות:</b> הנתונים נשמרים רק במכשיר הזה, ונמחקים 60 יום אחרי השימוש האחרון.</li></ul></div>`);
+  const r=el(`<div class="row" style="margin-top:12px"><button class="btn big green">${fromAdult?'חזרה':'▶ מתחילים'}</button></div>`);
+  r.querySelector('button').onclick=()=>{DB.introSeen=1;save();fromAdult?screenTeacher():screenName();};
+  panel.append(r);stage.append(panel);
+}
+
+// Printable certificate (books finished, moving up a group, or from the report).
+function screenCertificate(p,what,back){
+  clearStage();say(`תעודה ל${p.name}! 🏅`,null,'praise');sfx('win');fireworks(2);
+  const c=el(`<div class="cert"><div class="certin"><div style="font-size:30px">🏅</div><div class="ct">תעודת הצטיינות</div><div class="cn">${esc(p.name)}</div><div class="cw">${esc(what)}</div><div style="font-size:64px;margin:6px 0">${p.avatar}</div><div class="cd">קוראים בכיף · ${new Date().toLocaleDateString('he-IL')}</div></div></div>`);
+  stage.append(c);
+  const r=el(`<div class="row noprint" style="margin-top:14px"><button class="btn">🖨️ הדפסה</button><button class="btn ghostb">חזרה</button></div>`);
+  const [pr,bk]=r.querySelectorAll('button');pr.onclick=()=>{try{window.print();}catch(e){}};bk.onclick=back;
+  stage.append(el(`<p class="center muted noprint" style="font-size:15px">אם ההדפסה לא נפתחת, אפשר לצלם מסך ולהדפיס את התמונה.</p>`));
+  stage.append(r);
 }
 
 /* ===================== Wiring ===================== */
@@ -1340,8 +1582,15 @@ const soundBtn=document.getElementById('soundBtn');
 function drawSound(){soundBtn.textContent=DB.sound?'🔊':'🔇';}
 soundBtn.onclick=()=>{DB.sound=!DB.sound;save();drawSound();if(!DB.sound)Speech.stop();};
 document.getElementById('buddy').onclick=()=>speakUI(lastSpeech,lastStyle);
-document.getElementById('homeBtn').onclick=()=>P()&&P().group?screenHome():screenName();
-document.getElementById('teachBtn').onclick=screenGate;
+function inRound(){return stage.classList.contains('exmode');}
+function confirmLeave(go){
+  if(!inRound())return go();if(document.querySelector('.modal'))return;
+  const m=el(`<div class="modal" role="dialog" aria-modal="true" aria-label="לצאת?"><div class="modalbox"><div style="font-size:60px">🏠</div><h2>לצאת באמצע?</h2><p class="muted" style="font-size:18px">הכוכבים שלך שמורים.</p><div class="row"><button class="btn big green">${g('אני נשאר','אני נשארת')} 👍</button><button class="btn ghostb">לצאת</button></div></div></div>`);
+  const [stay,leave]=m.querySelectorAll('button');stay.onclick=()=>m.remove();leave.onclick=()=>{m.remove();go();};
+  m.onclick=e=>{if(e.target===m)m.remove();};document.body.append(m);stay.focus();
+}
+document.getElementById('homeBtn').onclick=()=>confirmLeave(()=>P()&&P().group?screenHome():screenName());
+document.getElementById('teachBtn').onclick=()=>confirmLeave(screenGate);
 window.addEventListener('error',e=>{
   if(window.__crashShown)return;window.__crashShown=true;console.error(e.error||e.message);
   try{clearStage();say('אופס! משהו השתבש. לא נורא 🙂');stage.append(el(`<div class="center" style="margin-top:30px"><div class="pic">🛠️</div><h2>אופס, משהו השתבש</h2><p class="muted">הכוכבים וההתקדמות שמורים.</p></div>`));
@@ -1353,7 +1602,7 @@ if(IS_PROD&&'serviceWorker' in navigator&&(location.protocol==='https:'||locatio
 }
 Speech.init().then(()=>{if(Speech.mode==='server'&&voiceOn()&&lastSpeech.length)speakUI(lastSpeech,lastStyle);});
 drawSound();setBuddy();
-screenName();
+firstScreen();
 </script>
 </body>
 </html>
